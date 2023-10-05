@@ -1,1 +1,1 @@
-"ThreadHub" - informacinių sistemų inžinerijos pirmakursių komandinis projektas, siekantis atkurti "Reddit" platformą.
+"ThreadHub" - informacinių sistemų inžinerijos pirmakursių komandinis projektas, siekiantis atkurti "Reddit" platformą.
