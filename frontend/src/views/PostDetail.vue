@@ -32,7 +32,6 @@
 export default {
     props: ['id'],
     data() {
-        // Example data, replace with API call or Vuex store in a real app
         const posts = [{
                 id: '1',
                 title: 'Post 1',
@@ -53,7 +52,7 @@ export default {
             comments: [
                 { id: 1, username: 'user1', text: 'Great post!' },
                 { id: 2, username: 'user2', text: 'Thanks for sharing.' }
-                // ... (more comments as needed) ...
+                // More comments...
             ]
         };
     },
@@ -89,9 +88,9 @@ export default {
     border: 1px solid #ddd;
     padding: 20px;
     margin-bottom: 15px;
-    max-width: 50vw;
     display: flex;
-    align-items: start;
+    align-items: flex-start;
+    border-radius: 5px;
 }
 
 .post-content {

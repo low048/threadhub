@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '../views/HomePage.vue';
 import PostDetail from '../views/PostDetail.vue';
-import Login from '../views/LoginPage.vue';  // Adjust path if stored elsewhere
-import SignUp from '../views/SignUpPage.vue';  // Adjust path if stored elsewhere
+import Login from '../views/LoginPage.vue';
+import SignUp from '../views/SignUpPage.vue';
 
 const routes = [
   {

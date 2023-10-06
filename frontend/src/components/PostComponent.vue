@@ -11,7 +11,7 @@
     </div>
     <div class="post-content">
         <h2>
-            <router-link :to="{ name: 'PostDetail', params: { id: post.id.toString() } }">
+            <router-link  style="text-decoration: none;" :to="{ name: 'PostDetail', params: { id: post.id.toString() } }">
                 {{ post.title }}
             </router-link>
         </h2>
@@ -47,7 +47,8 @@ export default {
     padding: 20px;
     margin-bottom: 15px;
     display: flex;
-    align-items: start;
+    align-items: flex-start;
+    border-radius: 5px;
 }
 
 .post-content {
