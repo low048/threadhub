@@ -1,47 +1,37 @@
 <template>
-    <div class="post">
+    <div class="comment-box">
         <div class="votes">
-            <button @click="upvote" class="vote-button">
+            <button @click="upvoteComment" class="vote-button">
                 <img src="@/assets/upvote.png" alt="Upvote" class="vote-image">
             </button>
-            <p class="vote-number">{{ post.votes }}</p>
-            <button @click="downvote" class="vote-button">
+            <p class="vote-number">{{ comment.votes }}</p>
+            <button @click="downvoteComment" class="vote-button">
                 <img src="@/assets/downvote.png" alt="Downvote" class="vote-image">
             </button>
         </div>
-        <div class="post-content">
-            <h2>
-                <router-link :to="{ name: 'PostDetail', params: { id: post.id } }" style="text-decoration: none;">
-                    {{ post.title }}
-                </router-link>
-            </h2>
-            <p>{{ post.content }}</p>
+        <div class="comment-content">
+            <p><strong>{{ comment.author }}</strong>: <span v-html="comment.content"></span></p>
+            <p class="comment-timestamp">Commented at: {{ comment.timestamp.toLocaleString() }}</p>
         </div>
     </div>
 </template>
 
 <script>
 export default {
-    props: {
-        post: {
-            type: Object,
-            required: true
-        }
-    },
+    props: ['comment'],
     methods: {
-        upvote() {
-            this.$emit('upvote', this.post.id);
+        upvoteComment() {
+            // TODO: Implement upvote logic for comment
         },
-        downvote() {
-            this.$emit('downvote', this.post.id);
+        downvoteComment() {
+            // TODO: Implement downvote logic for comment
         }
     }
 };
 </script>
-    
 
 <style scoped>
-.post {
+.comment-box {
     border: 1px solid #ddd;
     padding: 20px;
     margin-bottom: 15px;
@@ -50,21 +40,20 @@ export default {
     border-radius: 5px;
 }
 
-.post-content {
+.comment-content {
     margin-left: 20px;
 }
 
-h2 {
-    font-size: 1.5rem;
+.comment-author {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.comment-text {
     margin-bottom: 10px;
 }
 
-.router-link-exact-active {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.votes {
+.comment-votes {
     display: flex;
     flex-direction: column;
     align-items: center;

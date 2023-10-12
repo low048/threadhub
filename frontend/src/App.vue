@@ -5,8 +5,12 @@
         <router-link to="/" class="header-link">threadhub</router-link>
       </h1>
       <div class="header-buttons">
-        <button @click="goToLogin">Log In</button>
-        <button @click="goToSignUp">Sign Up</button>
+        <button v-if="!isAuthenticated" @click="goToLogin">Log In</button>
+        <button v-if="!isAuthenticated" @click="goToSignUp">Sign Up</button>
+        <div v-if="isAuthenticated" class="user-info">
+          <p class="welcome-text">Welcome, {{ userEmail }}</p>
+          <button @click="logout">Log Out</button>
+        </div>
       </div>
     </header>
     <div class="content">
@@ -16,15 +20,31 @@
 </template>
 
 <script>
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+
 export default {
-  name: 'App',
-  methods: {
-    goToLogin() {
-      this.$router.push({ name: 'LoginPage' });  // Ensure the name matches your route name
-    },
-    goToSignUp() {
-      this.$router.push({ name: 'SignUpPage' });  // Ensure the name matches your route name
-    }
+  setup() {
+    const store = useStore();
+    const router = useRouter();
+
+    const isAuthenticated = computed(() => store.getters.isAuthenticated);
+    const userEmail = computed(() => store.state.user?.email || '');
+
+    const goToLogin = () => {
+      router.push({ name: 'LoginPage' });
+    };
+
+    const goToSignUp = () => {
+      router.push({ name: 'SignUpPage' });
+    };
+
+    const logout = () => {
+      store.dispatch('logout');
+    };
+
+    return { isAuthenticated, userEmail, goToLogin, goToSignUp, logout };
   }
 };
 </script>
@@ -52,6 +72,11 @@ header h1 {
   text-decoration: none;
 }
 
+.header-buttons {
+  display: flex;
+  align-items: center;
+}
+
 .header-buttons button {
   background-color: white;
   color: #007bff;
@@ -66,6 +91,17 @@ header h1 {
 .header-buttons button:hover {
   background-color: #007bff;
   color: white;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.welcome-text {
+  color: white;
+  margin:0;
+  margin-right: 20px;
 }
 
 .content {

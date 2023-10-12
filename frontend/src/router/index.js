@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '../views/HomePage.vue';
 import PostDetail from '../views/PostDetail.vue';
-import Login from '../views/LoginPage.vue';
-import SignUp from '../views/SignUpPage.vue';
+import LoginPage from '../views/LoginPage.vue';
+import SignUpPage from '../views/SignUpPage.vue';
+//import store from '@/store';
+
 
 const routes = [
   {
@@ -19,18 +21,33 @@ const routes = [
   {
     path: '/login',
     name: 'LoginPage',
-    component: Login
+    component: LoginPage
   },
   {
     path: '/signup',
     name: 'SignUpPage',
-    component: SignUp
-  }
+    component: SignUpPage
+  },
+  /*{
+    path: '/protected-route',
+    name: 'ProtectedRoute',
+    component: ProtectedComponent,
+    meta: { requiresAuth: true }
+  }*/
 ];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 });
+
+/*router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  if (requiresAuth && !store.getters.isAuthenticated) {
+    next('/login');
+  } else {
+    next();
+  }
+});*/
 
 export default router;

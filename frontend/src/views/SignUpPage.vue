@@ -1,7 +1,7 @@
 <template>
   <div class="auth-container">
     <h2>Sign Up</h2>
-    <form @submit.prevent="login">
+    <form @submit.prevent="signUp">
       <div>
         <input type="email" id="email" v-model="email" required placeholder="Email" />
       </div>
@@ -14,17 +14,24 @@
 </template>
 
 <script>
+import { ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+
 export default {
-  data() {
-    return {
-      email: '',
-      password: ''
+  setup() {
+    const email = ref('');
+    const password = ref('');
+    const store = useStore();
+    const router = useRouter();
+
+    const signUp = async () => {
+      await store.dispatch('signUp', { email: email.value, password: password.value });
+      // Redirect to the homepage after successful sign up
+      router.push({ name: 'Home' });
     };
-  },
-  methods: {
-    login() {
-      console.log('User signed up with', this.email, this.password);
-    }
+
+    return { email, password, signUp };
   }
 };
 </script>
