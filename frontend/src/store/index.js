@@ -103,14 +103,14 @@ export default createStore({
         try {
           const commentWithLineBreaks = commentText.replace(/\n/g, '<br>'); // Replace new lines with <br> tags
           await addDoc(collection(db, 'posts', postId, 'comments'), {
-            author: 'currentUser',
+            author: this.state.user.email,
             content: commentWithLineBreaks,
             votes: 0,
             timestamp: serverTimestamp(),
           });
           // Add the new comment to the local state
           const newComment = {
-            author: 'currentUser',
+            author: this.state.user.email,
             content: commentWithLineBreaks,
             votes: 0,
             timestamp: new Date(),

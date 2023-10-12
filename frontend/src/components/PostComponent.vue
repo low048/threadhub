@@ -15,7 +15,7 @@
                     {{ post.title }}
                 </router-link>
             </h2>
-            <p>{{ post.content }}</p>
+            <p>{{ trimmedContent(post.content) }}</p>
         </div>
     </div>
 </template>
@@ -34,6 +34,14 @@ export default {
         },
         downvote() {
             this.$emit('downvote', this.post.id);
+        },
+        trimmedContent(content) {
+            const maxLength = 100; // Maximum number of characters to display
+            if (content.length > maxLength) {
+                return content.substring(0, maxLength) + '...'; // Add ellipsis when content is too long
+            } else {
+                return content;
+            }
         }
     }
 };

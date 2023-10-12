@@ -19,9 +19,12 @@
             </div>
             <div class="comments-section">
                 <h2>Comments</h2>
-                <div class="add-comment">
+                <div class="add-comment" v-if="isAuthenticated">
                     <textarea v-model="newComment" placeholder="Add a comment..." class="comment-input" rows="3"></textarea>
                     <button @click="addComment" class="comment-button">Post Comment</button>
+                </div>
+                <div v-else>
+                    <p>You must be logged in to post a comment.</p>
                 </div>
                 <div v-for="comment in comments" :key="comment.id" class="comment">
                     <comment-component :comment="comment" />
@@ -50,6 +53,7 @@ export default {
         const post = ref({});
         const newComment = ref('');
         const loading = ref(true);
+        const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
         const comments = computed(() => store.state.postDetails.comments);
 
@@ -84,7 +88,7 @@ export default {
             }
         };
 
-        return { post, comments, newComment, loading, upvote, downvote, addComment };
+        return { post, isAuthenticated, comments, newComment, loading, upvote, downvote, addComment };
     }
 };
 </script>
