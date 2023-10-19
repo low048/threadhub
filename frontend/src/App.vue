@@ -30,7 +30,7 @@ export default {
     const router = useRouter();
 
     const isAuthenticated = computed(() => store.getters.isAuthenticated);
-    const userEmail = computed(() => store.state.user?.email || '');
+    const userEmail = computed(() => store.state.auth.user?.email || '');
 
     const goToLogin = () => {
       router.push({ name: 'LoginPage' });

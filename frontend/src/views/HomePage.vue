@@ -2,15 +2,15 @@
     <div id="app">
         <div v-if="loading">Loading posts...</div>
         <div v-else>
-            <post-component v-for="post in posts" :key="post.id" :post="post" @upvote="upvotePost" @downvote="downvotePost"></post-component>
+            <post-component v-for="post in posts" :key="post.id" :post="post"></post-component>
         </div>
     </div>
 </template>
     
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { db } from '@/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import PostComponent from '@/components/PostComponent.vue';
 
 export default {
@@ -20,34 +20,24 @@ export default {
     setup() {
         const posts = ref([]);
         const loading = ref(true);
-
-        onMounted(async () => {
-            try {
-                console.log("Fetching posts...");
-                const postsCol = collection(db, 'posts');
-                const querySnapshot = await getDocs(postsCol);
+        let unsubscribe; // To hold the unsubscribe function for the Firestore listener
+        
+        onMounted(() => {
+            const postsCol = collection(db, 'posts');
+            unsubscribe = onSnapshot(postsCol, (querySnapshot) => {
                 posts.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                console.log("Posts fetched:", posts.value);
-            } catch (error) {
-                console.error("Error fetching posts:", error);
-            } finally {
                 loading.value = false;
+            });
+        });
+
+        // Ensure you unsubscribe from the Firestore listener when the component is destroyed
+        onBeforeUnmount(() => {
+            if (unsubscribe) {
+                unsubscribe();
             }
         });
 
-        const upvotePost = (postId) => {
-            const post = posts.value.find(p => p.id === postId);
-            if (post) post.votes++;
-            // TODO: Update votes in Firestore
-        };
-
-        const downvotePost = (postId) => {
-            const post = posts.value.find(p => p.id === postId);
-            if (post) post.votes--;
-            // TODO: Update votes in Firestore
-        };
-
-        return { posts, loading, upvotePost, downvotePost };
+        return { posts, loading };
     }
 };
 </script>

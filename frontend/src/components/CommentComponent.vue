@@ -2,11 +2,11 @@
     <div class="comment-box">
         <div class="votes">
             <button @click="upvoteComment" class="vote-button">
-                <img src="@/assets/upvote.png" alt="Upvote" class="vote-image">
+                <img :src="userVoteValue === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')" alt="Upvote" class="vote-image">
             </button>
             <p class="vote-number">{{ comment.votes }}</p>
             <button @click="downvoteComment" class="vote-button">
-                <img src="@/assets/downvote.png" alt="Downvote" class="vote-image">
+                <img :src="userVoteValue === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')" alt="Downvote" class="vote-image">
             </button>
         </div>
         <div class="comment-content">
@@ -18,13 +18,64 @@
 
 <script>
 export default {
-    props: ['comment'],
+    props: ['comment', 'postId'],  // Add postId to props
+    data() {
+        return {
+            userVoteValue: null
+        };
+    },
+    watch: {
+        '$store.state.auth.user': {
+            immediate: true,
+            handler(newValue) {
+                if (newValue) {
+                    const userId = newValue.uid;
+                    this.fetchUserVote(userId);
+                }
+            }
+        }
+    },
     methods: {
+        async fetchUserVote(userId) {
+            const vote = await this.$store.dispatch('fetchUserCommentVote', { userId, postId: this.postId, commentId: this.comment.id });
+            this.userVoteValue = vote;
+        },
         upvoteComment() {
-            // TODO: Implement upvote logic for comment
+            this.voteComment(1);
         },
         downvoteComment() {
-            // TODO: Implement downvote logic for comment
+            this.voteComment(-1);
+        },
+        async voteComment(voteValue) {
+            if (this.$store.state.auth.user) {
+                const currentVote = this.userVoteValue;
+                let changeInVotes = 0;
+
+                if (currentVote === voteValue) {
+                    voteValue = 0;
+                }
+                if (currentVote === null) {
+                    changeInVotes = voteValue;
+                } else {
+                    changeInVotes = voteValue - currentVote;
+                }
+
+                // Optimistically update the UI
+                this.userVoteValue = voteValue;
+                this.$emit('vote-change', this.comment.id, changeInVotes);
+
+                await this.$store.dispatch('voteOnComment', {
+                    userId: this.$store.state.auth.user.uid,
+                    postId: this.postId,
+                    commentId: this.comment.id,
+                    voteValue
+                });
+
+                // If you want to be super sure, you can re-fetch the vote count here (but this may not be necessary if your backend ensures vote counts are correct)
+                this.fetchUserVote(this.$store.state.auth.user.uid);
+            } else {
+                console.log("User not logged in");
+            }
         }
     }
 };
