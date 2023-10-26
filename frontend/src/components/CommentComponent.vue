@@ -131,4 +131,10 @@ export default {
     height: 18px;
     text-align: center;
 }
+
+.comment-timestamp {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
 </style>

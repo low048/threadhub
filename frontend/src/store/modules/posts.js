@@ -1,4 +1,4 @@
-import { runTransaction, increment, collection, getDoc, getDocs, doc } from 'firebase/firestore';
+import { runTransaction, increment, collection, getDoc, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase';
 
 const findPostById = (state, postId) => state.postList.find(p => p.id === postId);
@@ -13,14 +13,14 @@ export default {
       state.postList = posts;
     },
     ADD_COMMENT(state, comment) {
-        console.log("Adding comment: ", comment);
-        const post = findPostById(state, comment.postId);
-        console.log(post);
-        if (post) {
-            post.comments = [...post.comments, comment];
-            console.log("post.comments = [...post.comments, comment]");
-        }
-    },  
+      console.log("Adding comment: ", comment);
+      const post = findPostById(state, comment.postId);
+      console.log(post);
+      if (post) {
+        post.comments = [...post.comments, comment];
+        console.log("post.comments = [...post.comments, comment]");
+      }
+    },
     UPDATE_VOTE_COUNT(state, { postId, newVoteCount }) {
       const post = findPostById(state, postId);
       if (post) post.votes = newVoteCount;
@@ -29,28 +29,54 @@ export default {
       const post = findPostById(state, postId);
       if (post) post.userVote = voteValue;
     },
+    ADD_POST(state, post) {
+      //check this later
+      if (post.votes === undefined) post.votes = 0;
+      if (post.timestamp === undefined) post.timestamp = new Date();
+      state.postList.unshift(post);
+    },
   },
   actions: {
-      async fetchSinglePost({ commit }, postId) {
-        try {
-            const postRef = doc(db, 'posts', postId);
-            const postDoc = await getDoc(postRef);
+    async addPost({ commit, rootState, rootGetters }, postData) {
+      try {
+        const user = rootGetters.currentUser || rootState.auth.user;
+        postData.author = user.email;
 
-            if (postDoc.exists()) {
-                let post = { id: postDoc.id, ...postDoc.data(), comments: [] };
-                const commentsColRef = collection(postRef, 'comments');
-                const commentsSnapshot = await getDocs(commentsColRef);
+        const postsColRef = collection(db, 'posts');
+        const newPostRef = doc(postsColRef);
+        await setDoc(newPostRef, {
+          ...postData,
+          votes: 0,
+          timestamp: serverTimestamp()
+        });
+        commit('ADD_POST', { ...postData, id: newPostRef.id });
+        console.log("New post added with ID:", newPostRef.id);
+        return newPostRef.id;
+      } catch (error) {
+        console.error("Error adding new post:", error);
+      }
+    },
+    async fetchSinglePost({ commit }, postId) {
+      try {
+        const postRef = doc(db, 'posts', postId);
+        const postDoc = await getDoc(postRef);
 
-                post.comments = commentsSnapshot.docs.map(commentDoc => {
-                    const data = commentDoc.data();
-                    return { ...data, id: commentDoc.id, timestamp: data.timestamp.toDate() };
-                });
+        if (postDoc.exists()) {
+          let post = { id: postDoc.id, ...postDoc.data(), comments: [] };
+          post.timestamp = post.timestamp.toDate();
+          const commentsColRef = collection(postRef, 'comments');
+          const commentsSnapshot = await getDocs(commentsColRef);
 
-                commit('SET_POSTS', [post]); // Add the single post to the list
-            }
-        } catch (error) {
-            console.error("Error fetching single post:", error);
+          post.comments = commentsSnapshot.docs.map(commentDoc => {
+            const data = commentDoc.data();
+            return { ...data, id: commentDoc.id, timestamp: data.timestamp.toDate() };
+          });
+
+          commit('SET_POSTS', [post]); // Add the single post to the list
         }
+      } catch (error) {
+        console.error("Error fetching single post:", error);
+      }
     },
     async fetchPosts({ commit, rootState, dispatch }) {
       try {
@@ -64,6 +90,7 @@ export default {
               const data = commentDoc.data();
               return { ...data, id: commentDoc.id, timestamp: data.timestamp.toDate() };
             });
+            post.timestamp = post.timestamp.toDate();
             return post;
           });
         });
@@ -81,7 +108,7 @@ export default {
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
-    },    
+    },
     async vote({ state, commit }, { userId, postId, voteValue, previousVote }) {
       try {
 

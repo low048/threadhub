@@ -17,6 +17,9 @@
                 <div class="post-content">
                     <h1 class="post-title">{{ post.title }}</h1>
                     <p v-html="post.content"></p>
+                    <div v-if="post.timestamp">
+                        <p class="author-timestamp">by u/{{ post.author }} at {{ post.timestamp.toLocaleString() }}</p>
+                    </div>
                 </div>
             </div>
             <div class="comments-section">
@@ -55,7 +58,7 @@ export default {
         onMounted(() => {
             const postId = route.params.id;
             if (store.state.posts.postList.length === 0 || !store.state.posts.postList.find(p => p.id === postId)) {
-                store.dispatch('fetchSinglePost', postId); // Dispatch fetchSinglePost
+                store.dispatch('fetchSinglePost', postId);
             }
             if (store.state.auth.user) {
                 fetchUserVote(store.state.auth.user.uid, postId);
@@ -236,7 +239,13 @@ export default {
     background-color: #0056b3;
 }
 
-.loading-post{
+.loading-post {
     text-align: center;
+}
+
+.author-timestamp {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 10px;
 }
 </style>

@@ -142,4 +142,5 @@ h2 {
     width: 24px;
     height: 18px;
     text-align: center;
-}</style>
+}
+</style>

@@ -3,8 +3,8 @@ import HomePage from '../views/HomePage.vue';
 import PostDetail from '../views/PostDetail.vue';
 import LoginPage from '../views/LoginPage.vue';
 import SignUpPage from '../views/SignUpPage.vue';
-//import store from '@/store';
-
+import AddPostPage from '../views/AddPostPage.vue';
+import store from '@/store';
 
 const routes = [
   {
@@ -28,12 +28,12 @@ const routes = [
     name: 'SignUpPage',
     component: SignUpPage
   },
-  /*{
-    path: '/protected-route',
-    name: 'ProtectedRoute',
-    component: ProtectedComponent,
+  {
+    path: '/add-post', 
+    name: 'AddPostPage', 
+    component: AddPostPage,
     meta: { requiresAuth: true }
-  }*/
+  },
 ];
 
 const router = createRouter({
@@ -41,13 +41,13 @@ const router = createRouter({
   routes
 });
 
-/*router.beforeEach((to, from, next) => {
+router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   if (requiresAuth && !store.getters.isAuthenticated) {
     next('/login');
   } else {
     next();
   }
-});*/
+});
 
 export default router;

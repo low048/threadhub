@@ -3,6 +3,7 @@
         <div class="loading-posts" v-if="loading">Loading posts...</div>
         <div v-else>
             <post-component v-for="post in posts" :key="post.id" :post="post"></post-component>
+            <button class="addpost-button" @click="goToAddPostPage">Add Post</button>
         </div>
     </div>
 </template>
@@ -10,12 +11,15 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import PostComponent from '@/components/PostComponent.vue';
 
 export default {
     components: { PostComponent },
+
     setup() {
         const store = useStore();
+        const router = useRouter();
         const loading = ref(true);
         const posts = computed(() => store.state.posts.postList);
 
@@ -24,7 +28,11 @@ export default {
             loading.value = false;
         });
 
-        return { posts, loading };
+        const goToAddPostPage = () => {
+            router.push({ name: 'AddPostPage' });
+        };
+
+        return { posts, loading, goToAddPostPage };
     }
 };
 </script>
@@ -36,7 +44,23 @@ export default {
     padding: 20px;
 }
 
-.loading-posts{
+.loading-posts {
     text-align: center;
+}
+
+.addpost-button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.addpost-button:hover {
+    background-color: #0056b3;
 }
 </style>

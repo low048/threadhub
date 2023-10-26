@@ -44,12 +44,12 @@ export default {
 
         // Add the new comment to the local state
         const newComment = {
-            id: newCommentId,
-            postId: postId, // Include postId here
-            author: user.email,
-            content: commentWithLineBreaks,
-            votes: 0,
-            timestamp: new Date(),
+          id: newCommentId,
+          postId: postId, // Include postId here
+          author: user.email,
+          content: commentWithLineBreaks,
+          votes: 0,
+          timestamp: new Date(),
         };
         commit('ADD_COMMENT', newComment);
 
