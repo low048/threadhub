@@ -47,7 +47,7 @@ form div {
   margin-bottom: 15px;
 }
 
-.login-button{
+.login-button {
   background-color: #007bff;
   color: white;
   border: 1px solid #007bff;

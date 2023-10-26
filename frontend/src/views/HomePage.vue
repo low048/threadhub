@@ -1,6 +1,6 @@
 <template>
     <div id="app">
-        <div v-if="loading">Loading posts...</div>
+        <div class="loading-posts" v-if="loading">Loading posts...</div>
         <div v-else>
             <post-component v-for="post in posts" :key="post.id" :post="post"></post-component>
         </div>
@@ -8,33 +8,20 @@
 </template>
     
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { db } from '@/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { ref, onMounted, computed } from 'vue';
+import { useStore } from 'vuex';
 import PostComponent from '@/components/PostComponent.vue';
 
 export default {
-    components: {
-        PostComponent
-    },
+    components: { PostComponent },
     setup() {
-        const posts = ref([]);
+        const store = useStore();
         const loading = ref(true);
-        let unsubscribe; // To hold the unsubscribe function for the Firestore listener
-        
-        onMounted(() => {
-            const postsCol = collection(db, 'posts');
-            unsubscribe = onSnapshot(postsCol, (querySnapshot) => {
-                posts.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                loading.value = false;
-            });
-        });
+        const posts = computed(() => store.state.posts.postList);
 
-        // Ensure you unsubscribe from the Firestore listener when the component is destroyed
-        onBeforeUnmount(() => {
-            if (unsubscribe) {
-                unsubscribe();
-            }
+        onMounted(async () => {
+            await store.dispatch('fetchPosts');
+            loading.value = false;
         });
 
         return { posts, loading };
@@ -47,5 +34,9 @@ export default {
     max-width: 50vw;
     margin: 0 auto;
     padding: 20px;
+}
+
+.loading-posts{
+    text-align: center;
 }
 </style>

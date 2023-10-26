@@ -1,15 +1,17 @@
 <template>
     <div class="post-container">
-        <div v-if="loading">Loading post...</div>
+        <div class="loading-post" v-if="loading">Loading post...</div>
         <div v-else>
             <div class="post">
                 <div class="votes">
                     <button @click="upvote" class="vote-button">
-                        <img :src="userVoteValue === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')" alt="Upvote" class="vote-image">
+                        <img :src="userVoteValue === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')"
+                            alt="Upvote" class="vote-image">
                     </button>
                     <p class="vote-number">{{ post.votes }}</p>
                     <button @click="downvote" class="vote-button">
-                        <img :src="userVoteValue === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')" alt="Downvote" class="vote-image">
+                        <img :src="userVoteValue === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')"
+                            alt="Downvote" class="vote-image">
                     </button>
                 </div>
                 <div class="post-content">
@@ -17,7 +19,7 @@
                     <p v-html="post.content"></p>
                 </div>
             </div>
-            <div class="comments-section">  
+            <div class="comments-section">
                 <h2>Comments</h2>
                 <div class="add-comment" v-if="isAuthenticated">
                     <textarea v-model="newComment" placeholder="Add a comment..." class="comment-input" rows="3"></textarea>
@@ -27,7 +29,7 @@
                     <p>You must be logged in to post a comment.</p>
                 </div>
                 <div v-for="comment in comments" :key="comment.id" class="comment">
-                    <comment-component :comment="comment" :postId="post.id" @vote-change="handleCommentVoteChange"/>
+                    <comment-component :comment="comment" :postId="post.id" @vote-change="handleCommentVoteChange" />
                 </div>
             </div>
         </div>
@@ -39,6 +41,8 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import CommentComponent from "@/components/CommentComponent.vue";
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 export default {
     components: {
@@ -48,31 +52,33 @@ export default {
     setup(props) {
         const store = useStore();
         const route = useRoute();
-
-        const post = ref({});
+        onMounted(() => {
+            const postId = route.params.id;
+            if (store.state.posts.postList.length === 0 || !store.state.posts.postList.find(p => p.id === postId)) {
+                store.dispatch('fetchSinglePost', postId); // Dispatch fetchSinglePost
+            }
+            if (store.state.auth.user) {
+                fetchUserVote(store.state.auth.user.uid, postId);
+            }
+        });
+        const post = computed(() => {
+            return store.state.posts.postList.find(p => p.id === route.params.id) || {};
+        });
         const newComment = ref('');
-        const loading = ref(true);
+        const loading = ref(false);
         const isAuthenticated = computed(() => store.getters.isAuthenticated);
         const comments = computed(() => {
-            return [...store.state.posts.postDetails.comments].sort((a, b) => b.votes - a.votes);
+            if (!post.value || !post.value.comments) {
+                return [];
+            }
+            return [...post.value.comments].sort((a, b) => b.votes - a.votes);
         });
-
-
-        const userVoteValue = ref(null);  // A ref to store the fetched user vote
-
-        const fetchPostDetails = async (postId) => {
-            loading.value = true;
-            console.log("fetching post details");
-            post.value = await store.dispatch('fetchPostDetails', postId);
-            console.log("post value " + post.value);
-            loading.value = false;
-        };
+        const userVoteValue = ref(post.value.userVote !== undefined ? post.value.userVote : 0);
 
         const fetchUserVote = async (userId, postId) => {
-            if (!postId) return;  // Exit if postId is undefined
-
+            if (!postId) return;
             const vote = await store.dispatch('fetchUserVote', { userId, postId });
-            userVoteValue.value = vote;
+            userVoteValue.value = vote !== null ? vote : 0;
         };
 
         const handleCommentVoteChange = (commentId, changeInVotes) => {
@@ -82,65 +88,45 @@ export default {
             }
         };
 
-        onMounted(() => {
-            const initialPostId = route.params.id;
-            // Fetch the post details for the initial postId
-            fetchPostDetails(initialPostId);
-
-            // If user is logged in, fetch the vote for the initial postId
-            if(store.state.auth.user) {
-                fetchUserVote(store.state.auth.user.uid, initialPostId);
-            }
-        });
-
         watch(() => route.params.id, (newPostId) => {
-            fetchPostDetails(newPostId);
-
-            if(store.state.auth.user) {
+            if (store.state.auth.user) {
                 fetchUserVote(store.state.auth.user.uid, newPostId);
             }
         });
 
-
         watch(() => store.state.auth.user, newValue => {
-            if (newValue && post.value.id) {  // Ensure both user and postId are available
+            if (newValue && post.value.id) {
                 fetchUserVote(newValue.uid, post.value.id);
             }
         }, { immediate: true });
 
+        watch(userVoteValue, (newValue) => {
+            console.log("User vote value changed to:", newValue);
+        });
 
         const vote = async (voteValue) => {
             if (store.state.auth.user) {
                 const currentVote = userVoteValue.value;
-
-                let changeInVotes = 0;
-
-                // If the user clicks on the same vote button again, reset the vote to 0
+                let newVoteValue;
                 if (currentVote === voteValue) {
-                    voteValue = 0;
-                }
-                if (currentVote === null) {
-                    changeInVotes = voteValue;
+                    newVoteValue = 0;
                 } else {
-                    changeInVotes = voteValue - currentVote;
+                    newVoteValue = voteValue;
                 }
-
-                // Optimistically update the UI
-                userVoteValue.value = voteValue;
-                post.value.votes += changeInVotes; // Adjust the post's votes count
-
-                // Dispatch vote action
-                await store.dispatch('vote', {
-                    userId: store.state.auth.user.uid,
-                    postId: post.value.id,
-                    voteValue
-                });
-
-                // Re-fetch the user's vote after the vote action completes
-                fetchUserVote(store.state.auth.user.uid, post.value.id);
+                userVoteValue.value = newVoteValue;
+                try {
+                    await store.dispatch('vote', {
+                        userId: store.state.auth.user.uid,
+                        postId: post.value.id,
+                        voteValue: newVoteValue,
+                        previousVote: currentVote
+                    });
+                } catch (error) {
+                    userVoteValue.value = currentVote;
+                    toast("Error while updating vote", { autoClose: 2000, type: 'error', position: 'bottom-right' });
+                }
             } else {
-                console.log("User not logged in");
-                // Handle unauthenticated user, e.g., show a login prompt
+                toast("User not logged in", { autoClose: 2000, type: 'error', position: 'bottom-right' });
             }
         };
 
@@ -159,11 +145,21 @@ export default {
             }
         };
 
-        return { post, isAuthenticated, comments, newComment, loading, userVoteValue, upvote, downvote, addComment, handleCommentVoteChange };
+        return {
+            post,
+            isAuthenticated,
+            comments,
+            newComment,
+            loading,
+            userVoteValue,
+            upvote,
+            downvote,
+            addComment,
+            handleCommentVoteChange
+        };
     }
 };
 </script>
-
 
 <style scoped>
 .post-container {
@@ -215,6 +211,7 @@ export default {
     height: 18px;
     text-align: center;
 }
+
 .comment-input {
     border: 1px solid #ddd;
     padding: 10px;
@@ -239,4 +236,7 @@ export default {
     background-color: #0056b3;
 }
 
+.loading-post{
+    text-align: center;
+}
 </style>

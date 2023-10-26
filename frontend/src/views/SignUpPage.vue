@@ -47,7 +47,7 @@ form div {
   margin-bottom: 15px;
 }
 
-.signup-button{
+.signup-button {
   background-color: #007bff;
   color: white;
   border: 1px solid #007bff;

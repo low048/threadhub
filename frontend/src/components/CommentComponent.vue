@@ -2,11 +2,13 @@
     <div class="comment-box">
         <div class="votes">
             <button @click="upvoteComment" class="vote-button">
-                <img :src="userVoteValue === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')" alt="Upvote" class="vote-image">
+                <img :src="userVoteValue === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')"
+                    alt="Upvote" class="vote-image">
             </button>
             <p class="vote-number">{{ comment.votes }}</p>
             <button @click="downvoteComment" class="vote-button">
-                <img :src="userVoteValue === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')" alt="Downvote" class="vote-image">
+                <img :src="userVoteValue === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')"
+                    alt="Downvote" class="vote-image">
             </button>
         </div>
         <div class="comment-content">

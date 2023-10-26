@@ -100,7 +100,7 @@ header h1 {
 
 .welcome-text {
   color: white;
-  margin:0;
+  margin: 0;
   margin-right: 20px;
 }
 

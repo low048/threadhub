@@ -2,26 +2,30 @@
     <div class="post">
         <div class="votes">
             <button @click="upvote" class="vote-button">
-                <img :src="userVoteValue === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')" alt="Upvote" class="vote-image">
+                <img :src="userVote === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')"
+                    alt="Upvote" class="vote-image">
             </button>
             <p class="vote-number">{{ post.votes }}</p>
             <button @click="downvote" class="vote-button">
-                <img :src="userVoteValue === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')" alt="Downvote" class="vote-image">
+                <img :src="userVote === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')"
+                    alt="Downvote" class="vote-image">
             </button>
         </div>
         <div class="post-content">
             <h2>
-                <router-link :to="{ name: 'PostDetail', params: { id: post.id } }" style="text-decoration: none;">
-                    {{ post.title }}
-                </router-link>
+                <router-link :to="{ name: 'PostDetail', params: { id: post.id } }" style="text-decoration: none;">{{
+                    post.title }}</router-link>
             </h2>
             <p v-html="trimmedContent(post.content)"></p>
         </div>
     </div>
 </template>
-
-
+  
 <script>
+import { computed, watch, ref } from 'vue';
+import { useStore } from 'vuex';
+import { toast } from 'vue3-toastify';
+
 export default {
     props: {
         post: {
@@ -29,73 +33,66 @@ export default {
             required: true
         }
     },
-    data() {
-        return {
-            userVoteValue: null  // A local data property to store the fetched user vote
-        };
-    },
-    watch: {
-        // Watch the user state from Vuex
-        '$store.state.auth.user': {
-            immediate: true,  // Run this watcher immediately when the component is created
-            handler(newValue) {
-                if (newValue) {
-                    const userId = newValue.uid;
-                    this.fetchUserVote(userId);  // Fetch the user's vote when the user data changes
-                }
-            }
-        }
-    },
-    methods: {
-        async fetchUserVote(userId) {
-            // Fetch the user vote and store it in the local data property
-            const vote = await this.$store.dispatch('fetchUserVote', { userId, postId: this.post.id });
-            this.userVoteValue = vote;
-        },
-        upvote() {
-            this.vote(1);
-        },
-        downvote() {
-            this.vote(-1);
-        },
-        async vote(voteValue) {
-            if (this.$store.state.auth.user) {
-                const currentVote = this.userVoteValue;
+    setup(props, context) {
+        const store = useStore();
+        const isAuthenticated = computed(() => store.getters.isAuthenticated);
+        const userVote = ref(props.post.userVote || 0);
+
+        watch(() => props.post.userVote, (newValue) => {
+            userVote.value = newValue || 0;
+        });
+
+        const vote = async (voteValue) => {
+            if (store.state.auth.user) {
+                const currentVote = userVote.value;
+                let newVoteValue;
+
                 if (currentVote === voteValue) {
-                    // If the user clicks on the same vote button again, reset the vote to 0
-                    voteValue = 0;
+                    newVoteValue = 0;
+                } else {
+                    newVoteValue = voteValue;
                 }
 
-                // Optimistically update UI
-                this.userVoteValue = voteValue;
-
-                // Dispatch vote action
-                await this.$store.dispatch('vote', {
-                    userId: this.$store.state.auth.user.uid,
-                    postId: this.post.id,
-                    voteValue
-                });
-
-                // Re-fetch the user's vote after the vote action completes
-                this.fetchUserVote(this.$store.state.auth.user.uid);
+                try {
+                    context.emit('vote-changed', { postId: props.post.id, change: newVoteValue - currentVote });
+                    await store.dispatch('vote', {
+                        userId: store.state.auth.user.uid,
+                        postId: props.post.id,
+                        voteValue: newVoteValue,
+                        previousVote: currentVote
+                    });
+                } catch (error) {
+                    toast("Error during voting:" + error, { autoClose: 2000, type: 'error', position: 'bottom-right' });
+                }
             } else {
-                console.log("User not logged in");
-                // Handle unauthenticated user, e.g., show a login prompt
+                toast("User not logged in", { autoClose: 2000, type: 'error', position: 'bottom-right' });
             }
-        },
-        trimmedContent(content) {
-            const maxLength = 200; // Maximum number of characters to display
-            if (content.length > maxLength) {
-                return content.substring(0, maxLength) + '...'; // Add ellipsis when content is too long
-            } else {
-                return content;
-            }
-        }
+        };
+
+        const upvote = () => {
+            vote(1);
+        };
+
+        const downvote = () => {
+            vote(-1);
+        };
+
+        const trimmedContent = content => {
+            const maxLength = 200;
+            return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
+        };
+
+        return {
+            upvote,
+            downvote,
+            trimmedContent,
+            userVote,
+            isAuthenticated
+        };
     }
 };
 </script>
-
-    
+  
 
 <style scoped>
 .post {
@@ -145,5 +142,4 @@ h2 {
     width: 24px;
     height: 18px;
     text-align: center;
-}
-</style>
+}</style>
