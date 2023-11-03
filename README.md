@@ -31,13 +31,13 @@ npm run serve
 ```
 
 
-Po šių komandų įvykdymo, projektas turėtų pasileisti ant http://localhost:8080/.
+Po šių komandų įvykdymo, projektas turėtų pasileisti ant http://localhost:8080/. Atlikus pakeitimus, programa atsinaujins automatiškai.
 
 # Darbas su Git naudojant GitHub Desktop
 
 Kiekvienam funkcionalumui turi būti sukurtas atskiras branch.
 
-### Sukurti naują atšaką:
+### Sukurkite naują branch:
 
 1. GitHub Desktop, pasirinkite `Current branch` meniu viršuje.
 2. Spauskite `New Branch`.
@@ -48,9 +48,9 @@ Kiekvienam funkcionalumui turi būti sukurtas atskiras branch.
 
 - Redaguokite kodą
 - GitHub Desktop automatiškai nustatys pakeistus failus.
-- Apačioje įrašykite prasmingą įsipareigojimo pranešimą (commit message) apibūdinantį atliktus pakeitimus.
+- Apačioje įrašykite prasmingą commit message, apibūdinantį atliktus pakeitimus.
 - Spauskite `Commit to [branch-name]`.
 
 ### Įkelkite pakeitimus į repo:
 
-- Kai esate pasiruošę dalintis savo pakeitimais, spauskite `Publish branch` (jei ši atšaka dar nebuvo įkelta), arba `Push origin`, kad įkeltumėte naujausius įsipareigojimus (commits) į GitHub.
+- Kai esate pasiruošę dalintis savo pakeitimais, spauskite `Publish branch` (jei ši atšaka dar nebuvo įkelta), arba `Push origin`, kad įkeltumėte naujausius commits į GitHub.
