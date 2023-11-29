@@ -31,7 +31,7 @@ npm run serve
 ```
 
 
-Po šių komandų įvykdymo, projektas turėtų pasileisti ant http://localhost:8080/. Atlikus pakeitimus, programa atsinaujins automatiškai.
+Po šių komandų įvykdymo, projektas turėtų pasileisti ant http://localhost:8080/. Išsaugojus pakeitimus, programa atsinaujins automatiškai.
 
 # Darbas su Git naudojant GitHub Desktop
 
@@ -53,4 +53,4 @@ Kiekvienam funkcionalumui turi būti sukurtas atskiras branch.
 
 ### Įkelkite pakeitimus į repo:
 
-- Kai esate pasiruošę dalintis savo pakeitimais, spauskite `Publish branch` (jei ši atšaka dar nebuvo įkelta), arba `Push origin`, kad įkeltumėte naujausius commits į GitHub.
+- Kai esate pasiruošę dalintis savo pakeitimais, spauskite `Publish branch` (jei šis dar nebuvo įkeltas), arba `Push origin`, kad įkeltumėte naujausius commits į GitHub.
