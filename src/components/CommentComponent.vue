@@ -15,6 +15,10 @@
             <p><strong>{{ comment.author }}</strong>: <span v-html="comment.content"></span></p>
             <p class="comment-timestamp">Commented at: {{ comment.timestamp.toLocaleString() }}</p>
         </div>
+
+            <button v-if="isCommentAuthor" @click="deleteComment" class="delete-button">
+                Delete
+            </button>
     </div>
 </template>
 
@@ -36,6 +40,11 @@ export default {
                 }
             }
         }
+    },
+    computed: {
+        isCommentAuthor() {
+            return this.$store.state.auth.user && this.comment.author === this.$store.state.auth.user.email;
+        },
     },
     methods: {
         async fetchUserVote(userId) {
@@ -78,8 +87,16 @@ export default {
             } else {
                 console.log("User not logged in");
             }
-        }
-    }
+        },
+        deleteComment() {
+            if (window.confirm("Are you sure you want to delete this comment?")) {
+                this.$store.dispatch('deleteComment', {
+                    postId: this.postId,
+                    commentId: this.comment.id
+                });
+            }
+        },
+    },
 };
 </script>
 

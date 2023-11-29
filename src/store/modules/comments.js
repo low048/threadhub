@@ -1,5 +1,7 @@
 import { runTransaction, increment, collection, getDoc, serverTimestamp, addDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase';
+import { deleteDoc } from 'firebase/firestore';
+
 
 export default {
   state: {
@@ -23,6 +25,11 @@ export default {
     SET_USER_COMMENT_VOTE(state, voteValue) {
       state.commentDetails.userVote = voteValue;
     },
+    // Add this inside the mutations object of comments.js
+    REMOVE_COMMENT(state, commentId) {
+      state.comments = state.comments.filter(comment => comment.id !== commentId);
+    },
+
   },
   actions: {
     async addComment({ commit, dispatch, rootState, rootGetters }, { postId, commentText }) {
@@ -110,5 +117,13 @@ export default {
         console.error("Error voting on comment: ", error);
       }
     },
+    async deleteComment({ commit }, { postId, commentId }) {
+      try {
+        await deleteDoc(doc(db, 'posts', postId, 'comments', commentId));
+        commit('REMOVE_COMMENT', commentId);
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+      }
+    }
   },
 };
