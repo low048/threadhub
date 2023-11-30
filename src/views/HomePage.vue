@@ -1,66 +1,82 @@
 <template>
-    <div id="app">
-        <div class="loading-posts" v-if="loading">Loading posts...</div>
-        <div v-else>
-            <post-component v-for="post in posts" :key="post.id" :post="post"></post-component>
-            <button class="addpost-button" @click="goToAddPostPage">Add Post</button>
+    <div class="homepage-layout">
+        <div id="community-list">
+            <h3>Communities</h3>
+            <community-component v-for="community in communities" :key="community.id"
+                :community="community"></community-component>
+        </div>
+        <div id="featured-posts">
+            <h3>Featured Posts</h3>
+            <div class="loading-posts" v-if="loading">Loading posts...</div>
+            <div v-else>
+                <post-component v-for="post in featuredPosts" :key="post.id" :post="post" :showCommunityId="true"></post-component>
+                
+            </div>
         </div>
     </div>
 </template>
-    
+
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import CommunityComponent from '@/components/CommunityComponent.vue';
 import PostComponent from '@/components/PostComponent.vue';
 
 export default {
-    components: { PostComponent },
-
+    components: {
+        PostComponent,
+        CommunityComponent
+    },
     setup() {
         const store = useStore();
-        const router = useRouter();
-        const loading = ref(true);
-        const posts = computed(() => store.state.posts.postList);
 
+        const loading = ref(true);
+
+        const communities = computed(() => store.getters['allCommunities']);
+
+        const featuredPosts = computed(() => {
+            return store.state.posts.postList
+                .filter(post => post.isFeatured)
+                .sort((a, b) => b.votes - a.votes); // Sorting by votes in descending order
+        });
+        
         onMounted(async () => {
-            await store.dispatch('fetchPosts');
+            await store.dispatch('fetchFeaturedPosts');
+            await store.dispatch('fetchCommunities');
             loading.value = false;
         });
 
-        const goToAddPostPage = () => {
-            router.push({ name: 'AddPostPage' });
+        return {
+            communities,
+            featuredPosts, // Update the name to reflect its purpose
+            loading,
         };
-
-        return { posts, loading, goToAddPostPage };
     }
-};
+}; 
 </script>
+  
+
 
 <style scoped>
-#app {
-    max-width: 50vw;
-    margin: 0 auto;
+.homepage-layout {
+    display: flex;
+    align-items: flex-start;
+}
+
+#community-list {
+    flex: 0 0 20vw;
     padding: 20px;
+    max-height: 100vh;
+    overflow: auto;
+}
+
+#featured-posts {
+    flex-grow: 1;
+    padding: 20px;
+    max-width: 60vw;
 }
 
 .loading-posts {
     text-align: center;
-}
-
-.addpost-button {
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-    margin-bottom: 10px;
-}
-
-.addpost-button:hover {
-    background-color: #0056b3;
 }
 </style>

@@ -32,7 +32,7 @@
                     <p>You must be logged in to post a comment.</p>
                 </div>
                 <div v-for="comment in comments" :key="comment.id" class="comment">
-                    <comment-component :comment="comment" :postId="post.id" @vote-change="handleCommentVoteChange" />
+                    <comment-component v-if="communityId" :comment="comment" :postId="post.id" :communityId="communityId" @vote-change="handleCommentVoteChange" />
                 </div>
             </div>
         </div>
@@ -40,7 +40,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import CommentComponent from "@/components/CommentComponent.vue";
@@ -55,18 +55,20 @@ export default {
     setup(props) {
         const store = useStore();
         const route = useRoute();
-        onMounted(() => {
+        const communityId = ref(route.params.communityId);
+        onMounted(async () => {
+            console.log("Community ID:", communityId.value);
             const postId = route.params.id;
             if (store.state.posts.postList.length === 0 || !store.state.posts.postList.find(p => p.id === postId)) {
-                store.dispatch('fetchSinglePost', postId);
-            }
-            if (store.state.auth.user) {
-                fetchUserVote(store.state.auth.user.uid, postId);
+                await store.dispatch('fetchSinglePost', { communityId: communityId, postId });
+                console.log("fetched single post from postdetails");
             }
         });
+
         const post = computed(() => {
             return store.state.posts.postList.find(p => p.id === route.params.id) || {};
         });
+
         const newComment = ref('');
         const loading = ref(false);
         const isAuthenticated = computed(() => store.getters.isAuthenticated);
@@ -76,13 +78,16 @@ export default {
             }
             return [...post.value.comments].sort((a, b) => b.votes - a.votes);
         });
-        const userVoteValue = ref(post.value.userVote !== undefined ? post.value.userVote : 0);
 
-        const fetchUserVote = async (userId, postId) => {
-            if (!postId) return;
-            const vote = await store.dispatch('fetchUserVote', { userId, postId });
-            userVoteValue.value = vote !== null ? vote : 0;
-        };
+        const userVoteValue = ref(0);
+
+        watch(() => post.value.userVote, (newVote) => {
+            userVoteValue.value = newVote !== undefined ? newVote : 0;
+        }, { immediate: true });
+
+        watch(() => post.value.comments, (newComments) => {
+            console.log("new comments:", newComments);
+        }, { immediate: true });
 
         const handleCommentVoteChange = (commentId, changeInVotes) => {
             const targetComment = comments.value.find(c => c.id === commentId);
@@ -91,32 +96,18 @@ export default {
             }
         };
 
-        watch(() => route.params.id, (newPostId) => {
-            if (store.state.auth.user) {
-                fetchUserVote(store.state.auth.user.uid, newPostId);
-            }
-        });
-
-        watch(() => store.state.auth.user, newValue => {
-            if (newValue && post.value.id) {
-                fetchUserVote(newValue.uid, post.value.id);
-            }
-        }, { immediate: true });
-
-        watch(userVoteValue, (newValue) => {
-            console.log("User vote value changed to:", newValue);
-        });
-
         const vote = async (voteValue) => {
             if (store.state.auth.user) {
-                const currentVote = userVoteValue.value;
+                const currentVote = post.value.userVote;
                 let newVoteValue;
+
                 if (currentVote === voteValue) {
                     newVoteValue = 0;
                 } else {
                     newVoteValue = voteValue;
                 }
-                userVoteValue.value = newVoteValue;
+                // Update the post's userVote directly
+                post.value.userVote = newVoteValue;
                 try {
                     await store.dispatch('vote', {
                         userId: store.state.auth.user.uid,
@@ -125,11 +116,20 @@ export default {
                         previousVote: currentVote
                     });
                 } catch (error) {
-                    userVoteValue.value = currentVote;
-                    toast("Error while updating vote", { autoClose: 2000, type: 'error', position: 'bottom-right' });
+                    // Revert the vote on error
+                    post.value.userVote = currentVote;
+                    toast("Error while updating vote", {
+                        autoClose: 2000,
+                        type: 'error',
+                        position: 'bottom-right'
+                    });
                 }
             } else {
-                toast("User not logged in", { autoClose: 2000, type: 'error', position: 'bottom-right' });
+                toast("User not logged in", {
+                    autoClose: 2000,
+                    type: 'error',
+                    position: 'bottom-right'
+                });
             }
         };
 
@@ -143,13 +143,14 @@ export default {
 
         const addComment = async () => {
             if (newComment.value.trim() !== '') {
-                await store.dispatch('addComment', { postId: props.id, commentText: newComment.value.trim() });
+                await store.dispatch('addComment', { postId: props.id, communityId: communityId.value, commentText: newComment.value.trim() });
                 newComment.value = '';
             }
         };
 
         return {
             post,
+            communityId,
             isAuthenticated,
             comments,
             newComment,

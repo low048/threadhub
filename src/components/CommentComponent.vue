@@ -2,12 +2,12 @@
     <div class="comment-box">
         <div class="votes">
             <button @click="upvoteComment" class="vote-button">
-                <img :src="userVoteValue === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')"
+                <img :src="userVote === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')"
                     alt="Upvote" class="vote-image">
             </button>
             <p class="vote-number">{{ comment.votes }}</p>
             <button @click="downvoteComment" class="vote-button">
-                <img :src="userVoteValue === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')"
+                <img :src="userVote === -1 ? require('@/assets/downvote_clicked.png') : require('@/assets/downvote.png')"
                     alt="Downvote" class="vote-image">
             </button>
         </div>
@@ -20,10 +20,10 @@
 
 <script>
 export default {
-    props: ['comment', 'postId'],  // Add postId to props
+    props: ['comment', 'postId', 'communityId'],
     data() {
         return {
-            userVoteValue: null
+            userVote: null
         };
     },
     watch: {
@@ -39,8 +39,8 @@ export default {
     },
     methods: {
         async fetchUserVote(userId) {
-            const vote = await this.$store.dispatch('fetchUserCommentVote', { userId, postId: this.postId, commentId: this.comment.id });
-            this.userVoteValue = vote;
+            const vote = await this.$store.dispatch('fetchUserCommentVote', { userId, communityId: this.communityId, postId: this.postId, commentId: this.comment.id });
+            this.userVote = vote;
         },
         upvoteComment() {
             this.voteComment(1);
@@ -50,7 +50,7 @@ export default {
         },
         async voteComment(voteValue) {
             if (this.$store.state.auth.user) {
-                const currentVote = this.userVoteValue;
+                const currentVote = this.userVote;
                 let changeInVotes = 0;
 
                 if (currentVote === voteValue) {
@@ -63,11 +63,12 @@ export default {
                 }
 
                 // Optimistically update the UI
-                this.userVoteValue = voteValue;
+                this.userVote = voteValue;
                 this.$emit('vote-change', this.comment.id, changeInVotes);
 
                 await this.$store.dispatch('voteOnComment', {
                     userId: this.$store.state.auth.user.uid,
+                    communityId: this.communityId,
                     postId: this.postId,
                     commentId: this.comment.id,
                     voteValue

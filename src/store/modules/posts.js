@@ -1,16 +1,28 @@
 import { runTransaction, increment, collection, getDoc, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase';
 
-const findPostById = (state, postId) => state.postList.find(p => p.id === postId);
-
+const findPostById = (state, postId) => {
+  // Find the post in the postList
+  return state.postList.find(p => p.id === postId);
+};
 
 export default {
   state: {
-    postList: [],
+    postList: [], // Now includes both regular and featured posts
+    // featuredPosts: [] // This is no longer needed
   },
   mutations: {
-    SET_POSTS(state, posts) {
-      state.postList = posts;
+    SET_POSTS(state, newPosts) {
+      newPosts.forEach(newPost => {
+        const existingPostIndex = state.postList.findIndex(post => post.id === newPost.id);
+        if (existingPostIndex !== -1) {
+          // Update existing post
+          state.postList[existingPostIndex] = newPost;
+        } else {
+          // Add new post
+          state.postList.push(newPost);
+        }
+      });
     },
     ADD_COMMENT(state, comment) {
       console.log("Adding comment: ", comment);
@@ -37,32 +49,44 @@ export default {
     },
   },
   actions: {
-    async addPost({ commit, rootState, rootGetters }, postData) {
+    async fetchFeaturedPosts({ dispatch, commit, state }) {
       try {
-        const user = rootGetters.currentUser || rootState.auth.user;
-        postData.author = user.email;
-
-        const postsColRef = collection(db, 'posts');
-        const newPostRef = doc(postsColRef);
-        await setDoc(newPostRef, {
-          ...postData,
-          votes: 0,
-          timestamp: serverTimestamp()
-        });
-        commit('ADD_POST', { ...postData, id: newPostRef.id });
-        console.log("New post added with ID:", newPostRef.id);
-        return newPostRef.id;
+          console.log("fetchFeaturedPosts called");
+          const featuredPostsPaths = [
+              'communities/explainlikeimfive/post/5QFlpxS3D1i406rMzIXk',
+              'communities/lithuania/post/XO7FWcS9PlfpXZAWidd2',
+              'communities/ChoosingBeggars/post/6kerGzzjjIxwO9y6tlmJ',
+              'communities/explainlikeimfive/post/le0Xoyon3fs6ilgPPXyN',
+          ];
+  
+          for (const path of featuredPostsPaths) {
+              const pathSegments = path.split('/');
+              const communityId = pathSegments[1];
+              const postId = pathSegments[3];
+  
+              if (communityId && postId) {
+                  await dispatch('fetchSinglePost', { communityId: { value: communityId }, postId: postId });
+  
+                  // Set the isFeatured property after fetching
+                  const featuredPost = findPostById(state, postId);
+                  if (featuredPost) {
+                      const updatedPost = { ...featuredPost, isFeatured: true };
+                      commit('SET_POSTS', [updatedPost]); // Use SET_POSTS to update the post
+                  }
+              }
+          }
       } catch (error) {
-        console.error("Error adding new post:", error);
+          console.error("Error in fetchFeaturedPosts: ", error);
       }
-    },
-    async fetchSinglePost({ commit }, postId) {
+    },     
+    async fetchSinglePost({ commit, rootState, dispatch }, { communityId, postId }) {
       try {
-        const postRef = doc(db, 'posts', postId);
+        console.log("trying to fetch single post");
+        const postRef = doc(db, `communities/${communityId.value}/posts`, postId);
         const postDoc = await getDoc(postRef);
-
+        console.log("fetched single post", `communities/${communityId.value}/posts`, postId);
         if (postDoc.exists()) {
-          let post = { id: postDoc.id, ...postDoc.data(), comments: [] };
+          let post = { id: postDoc.id, communityId: communityId.value, ...postDoc.data(), comments: [] };
           post.timestamp = post.timestamp.toDate();
           const commentsColRef = collection(postRef, 'comments');
           const commentsSnapshot = await getDocs(commentsColRef);
@@ -71,19 +95,28 @@ export default {
             const data = commentDoc.data();
             return { ...data, id: commentDoc.id, timestamp: data.timestamp.toDate() };
           });
-
-          commit('SET_POSTS', [post]); // Add the single post to the list
+          console.log("set single post");
+          commit('SET_POSTS', [post]);
+          console.log("set posts in fetchSinglePost");
+          if (rootState.auth.user) {
+            const userId = rootState.auth.user.uid;
+            const userVoteValue = await dispatch('fetchUserVote', { userId, postId });
+            post.userVote = userVoteValue;
+            console.log("setting uservote to", userVoteValue, "in fetchSinglePost");
+            commit('SET_POSTS', [post]);
+          }
         }
       } catch (error) {
         console.error("Error fetching single post:", error);
       }
     },
-    async fetchPosts({ commit, rootState, dispatch }) {
+    async fetchPosts({ commit, rootState, dispatch }, communityId) {
       try {
-        const postsCol = collection(db, 'posts');
-        const querySnapshot = await getDocs(postsCol);
+        console.log("fetching posts for", communityId.value);
+        const postsColRef = collection(db, `communities/${communityId.value}/posts`);
+        const querySnapshot = await getDocs(postsColRef);
         const posts = querySnapshot.docs.map(doc => {
-          const post = { id: doc.id, ...doc.data(), comments: [] };
+          const post = { id: doc.id, communityId: communityId.value, ...doc.data(), comments: [] };
           const commentsColRef = collection(doc.ref, 'comments');
           return getDocs(commentsColRef).then(commentsSnapshot => {
             post.comments = commentsSnapshot.docs.map(commentDoc => {
@@ -95,39 +128,58 @@ export default {
           });
         });
         const resolvedPosts = await Promise.all(posts);
+        commit('SET_POSTS', resolvedPosts);
+        console.log("set posts in fetchPosts");
         if (rootState.auth.user) {
           const userId = rootState.auth.user.uid;
           for (let post of resolvedPosts) {
             if (post.id && userId) {
-              const userVote = await dispatch('fetchUserVote', { userId, postId: post.id });
-              post.userVote = userVote;
+              const userVoteValue = await dispatch('fetchUserVote', { userId, postId: post.id });
+              post.userVote = userVoteValue;
+              console.log("setting uservote to", userVoteValue, "in fetchPosts");
             }
           }
+          commit('SET_POSTS', resolvedPosts);
         }
-        commit('SET_POSTS', resolvedPosts);
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
     },
+    async fetchUserVote({ state, commit }, { userId, postId }) {
+      try {
+        // Find the post in the state
+        const post = findPostById(state, postId);
+        console.log('Post found:', post);
+        console.log('Current state.postList:', state.postList);
+        // Check if the post is found and has a communityId
+        if (post && post.communityId) {
+          const userVoteRef = doc(db, `communities/${post.communityId}/posts`, postId, 'userVotes', userId);
+          const userVoteDoc = await getDoc(userVoteRef);
+
+          if (userVoteDoc.exists() && userVoteDoc.data()) {
+            const userVote = userVoteDoc.data().vote || 0;
+            commit('SET_USER_VOTE', { postId: postId, voteValue: userVote });
+            return userVote;
+          }
+        } else {
+          console.error("Post not found in state or missing communityId", post);
+        }
+      } catch (error) {
+        console.error("Error fetching user vote: ", error);
+      }
+      return null;
+    },
     async vote({ state, commit }, { userId, postId, voteValue, previousVote }) {
       try {
-
-        console.log("currentVote", voteValue);
-        console.log("previousVote", previousVote);
-
-        const post = state.postList.find(p => p.id === postId);
+        const post = findPostById(state, postId)
         if (post) {
           const updatedVoteCount = post.votes + (voteValue - previousVote);
-          console.log("updatedVoteCount", updatedVoteCount);
           commit('UPDATE_VOTE_COUNT', { postId: postId, newVoteCount: updatedVoteCount });
         }
-
-        const userVoteRef = doc(db, 'posts', postId, 'userVotes', userId);
-        const postRef = doc(db, 'posts', postId);
-
+        const userVoteRef = doc(db, `communities/${post.communityId}/posts`, postId, 'userVotes', userId);
+        const postRef = doc(db, `communities/${post.communityId}/posts`, postId);
         await runTransaction(db, async (transaction) => {
           const userVoteDoc = await transaction.get(userVoteRef);
-
           if (userVoteDoc.exists && userVoteDoc.data() && typeof userVoteDoc.data().vote !== 'undefined') {
             // If the document exists and has a 'vote' field
             previousVote = userVoteDoc.data().vote;
@@ -136,31 +188,46 @@ export default {
             previousVote = 0;
             transaction.set(userVoteRef, { vote: 0 });
           }
-
           // Adjust post's vote count based on the difference
           const voteDifference = voteValue - previousVote;
-
           // Update the user's vote
           transaction.set(userVoteRef, { vote: voteValue }, { merge: true });
-
           // Update the post's vote count
           transaction.update(postRef, {
             votes: increment(voteDifference)
           });
         });
-
         commit('SET_USER_VOTE', { postId: postId, voteValue: voteValue });
-
-
         return voteValue;  // Return the value that was set.
 
       } catch (error) {
         console.error("Error voting: ", error);
       }
     },
-    async fetchTotalVotes({ commit }, postId) {
+    async addPost({ commit, rootState, rootGetters }, { postData, communityId }) {
       try {
-        const userVotesRef = collection(db, 'posts', postId, 'userVotes');
+        const user = rootGetters.currentUser || rootState.auth.user;
+        postData.author = user.email;
+
+        const postsColRef = collection(db, `communities/${communityId}/posts`); //communityId.value if it's passed as a ref, yet to be decided
+        const newPostRef = doc(postsColRef);
+        await setDoc(newPostRef, {
+          ...postData,
+          votes: 0,
+          timestamp: serverTimestamp()
+        });
+        commit('ADD_POST', { ...postData, id: newPostRef.id, communityId: communityId }); //communityId.value if it's passed as a ref, yet to be decided
+        console.log("New post added with ID:", newPostRef.id);
+        return newPostRef.id;
+      }
+      catch (error) {
+        console.error("Error adding new post:", error);
+      }
+    },
+    /* not used anywhere?
+    async fetchTotalVotes({ commit, state }, postId) {
+      try {
+        const userVotesRef = collection(db, `communities/${state.communityId.value}/posts`, postId, 'userVotes');
         const userVotesSnapshot = await getDocs(userVotesRef);
 
         let totalVotes = 0;
@@ -172,27 +239,13 @@ export default {
       } catch (error) {
         console.error("Error fetching total votes: ", error);
       }
-    },
-    async fetchUserVote({ commit }, { userId, postId }) {
-      try {
-        const userVoteRef = doc(db, 'posts', postId, 'userVotes', userId);
-        const userVoteDoc = await getDoc(userVoteRef);
-
-        if (userVoteDoc.exists() && userVoteDoc.data()) {
-          const userVoteValue = userVoteDoc.data().vote || 0;
-          commit('SET_USER_VOTE', { postId: postId, voteValue: userVoteValue });
-          return userVoteValue;
-        }
-      } catch (error) {
-        console.error("Error fetching user vote: ", error);
-      }
-      return null;
-    },
+    },*/
   },
   getters: {
     getPostVotes: (state) => (postId) => {
       const post = findPostById(state, postId);
       return post ? post.votes : null;
     },
+    getFeaturedPosts: state => state.featuredPosts,
   },
 };
