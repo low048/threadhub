@@ -1,5 +1,7 @@
 import { runTransaction, increment, collection, getDoc, serverTimestamp, addDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase';
+import { deleteDoc } from 'firebase/firestore';
+
 
 export default {
   state: {
@@ -19,6 +21,11 @@ export default {
     },
     SET_USER_COMMENT_VOTE(state, voteValue) {
       state.commentDetails.userVote = voteValue;
+    },
+    UPDATE_COMMENT(state, updatedComment) {
+      if (state.commentDetails.id === updatedComment.id) {
+        state.commentDetails = { ...state.commentDetails, ...updatedComment };
+      }
     },
   },
   actions: {
@@ -84,6 +91,53 @@ export default {
         return voteValue;
       } catch (error) {
         console.error("Error voting on comment: ", error);
+      }
+    },
+    async editComment({ state, commit, dispatch }, { postId, commentId, updatedContent }) {
+      try {
+        const commentRef = doc(db, 'posts', postId, 'comments', commentId);
+
+        // Fetch the existing comment data
+        const commentDoc = await getDoc(commentRef);
+
+        if (commentDoc.exists() && commentDoc.data()) {
+          const previousCommentDetails = {
+            id: commentDoc.id,
+            postId: postId, // Include postId here
+            author: commentDoc.data().author,
+            content: commentDoc.data().content,
+            votes: commentDoc.data().votes,
+            timestamp: commentDoc.data().timestamp.toDate(),
+          };
+
+          // Update the comment content in the database
+          await updateDoc(commentRef, {
+            content: updatedContent,
+            timestamp: serverTimestamp(), // Update the timestamp to reflect the edit
+          });
+
+          // Construct the updated comment details
+          const updatedCommentDetails = {
+            ...previousCommentDetails,
+            content: updatedContent,
+            timestamp: new Date(), // Update the timestamp in the local state
+          };
+
+          // Update the comment details in the local state using the mutation
+          commit('UPDATE_COMMENT', updatedCommentDetails);
+
+          // If necessary, fetch the user's updated vote after the edit
+          dispatch('fetchUserCommentVote', { userId: state.auth.user.uid, postId, commentId });
+
+          // You can also dispatch other actions or perform additional logic as needed
+
+          console.log(`Comment ${commentId} edited successfully!`);
+        } else {
+          console.error(`Comment ${commentId} not found.`);
+        }
+
+      } catch (error) {
+        console.error("Error editing comment:", error);
       }
     },
   },
