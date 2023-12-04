@@ -1,5 +1,7 @@
 import { runTransaction, increment, collection, getDoc, serverTimestamp, addDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase';
+import { deleteDoc } from 'firebase/firestore';
+
 
 export default {
   state: {

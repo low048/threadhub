@@ -59,6 +59,11 @@ export default {
             }
         }
     },
+    computed: {
+        isCommentAuthor() {
+            return this.$store.state.auth.user && this.comment.author === this.$store.state.auth.user.email;
+        },
+    },
     methods: {
         async fetchUserVote(userId) {
             const vote = await this.$store.dispatch('fetchUserCommentVote', { userId, postId: this.postId, commentId: this.comment.id });
