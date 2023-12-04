@@ -8,8 +8,7 @@ const findPostById = (state, postId) => {
 
 export default {
   state: {
-    postList: [], // Now includes both regular and featured posts
-    // featuredPosts: [] // This is no longer needed
+    postList: [],
   },
   mutations: {
     SET_POSTS(state, newPosts) {
@@ -224,22 +223,6 @@ export default {
         console.error("Error adding new post:", error);
       }
     },
-    /* not used anywhere?
-    async fetchTotalVotes({ commit, state }, postId) {
-      try {
-        const userVotesRef = collection(db, `communities/${state.communityId.value}/posts`, postId, 'userVotes');
-        const userVotesSnapshot = await getDocs(userVotesRef);
-
-        let totalVotes = 0;
-        userVotesSnapshot.forEach(doc => {
-          totalVotes += doc.data().vote;
-        });
-
-        commit('UPDATE_VOTE_COUNT', { postId, totalVotes });
-      } catch (error) {
-        console.error("Error fetching total votes: ", error);
-      }
-    },*/
   },
   getters: {
     getPostVotes: (state) => (postId) => {
