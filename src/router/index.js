@@ -4,6 +4,7 @@ import PostDetail from '../views/PostDetail.vue';
 import LoginPage from '../views/LoginPage.vue';
 import SignUpPage from '../views/SignUpPage.vue';
 import AddPostPage from '../views/AddPostPage.vue';
+import CommunityPage from '../views/CommunityPage.vue';
 import store from '@/store';
 
 const routes = [
@@ -13,7 +14,7 @@ const routes = [
     component: HomePage
   },
   {
-    path: '/post/:id',
+    path: '/communities/:communityId/post/:id',
     name: 'PostDetail',
     component: PostDetail,
     props: true
@@ -29,11 +30,23 @@ const routes = [
     component: SignUpPage
   },
   {
-    path: '/add-post', 
-    name: 'AddPostPage', 
+    path: '/communities/:communityId/add-post',
+    name: 'AddPostPage',
     component: AddPostPage,
+    props: true,
     meta: { requiresAuth: true }
   },
+  { 
+    path: '/communities/:communityId', 
+    name: 'CommunityPage', 
+    component: CommunityPage, 
+    props: true
+  },
+  /*{
+    path: '/test-community',
+    name: 'TestCommunityPage',
+    component: CommunityPage
+  },*/
 ];
 
 const router = createRouter({

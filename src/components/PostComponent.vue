@@ -1,5 +1,5 @@
 <template>
-    <div class="post">
+    <div class="post" @click="navigateToPost">
         <div class="votes">
             <button @click="upvote" class="vote-button">
                 <img :src="userVote === 1 ? require('@/assets/upvote_clicked.png') : require('@/assets/upvote.png')"
@@ -12,10 +12,8 @@
             </button>
         </div>
         <div class="post-content">
-            <h2>
-                <router-link :to="{ name: 'PostDetail', params: { id: post.id } }" style="text-decoration: none;">{{
-                    post.title }}</router-link>
-            </h2>
+            <p class="community-name" v-if="showCommunityId">c/{{ post.communityId }}</p>
+            <h2>{{ post.title }}</h2>
             <p v-html="trimmedContent(post.content)"></p>
         </div>
     </div>
@@ -23,18 +21,18 @@
   
 <script>
 import { computed, watch, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { toast } from 'vue3-toastify';
 
 export default {
     props: {
-        post: {
-            type: Object,
-            required: true
-        }
+        post: { type: Object, required: true },
+        showCommunityId: { type: Boolean, default: false }
     },
     setup(props, context) {
         const store = useStore();
+        const router = useRouter();
         const isAuthenticated = computed(() => store.getters.isAuthenticated);
         const userVote = ref(props.post.userVote || 0);
 
@@ -42,7 +40,13 @@ export default {
             userVote.value = newValue || 0;
         });
 
+        const navigateToPost = () => {
+            router.push({ name: 'PostDetail', params: { communityId: props.post.communityId, id: props.post.id } });
+        };
+
+
         const vote = async (voteValue) => {
+
             if (store.state.auth.user) {
                 const currentVote = userVote.value;
                 let newVoteValue;
@@ -52,7 +56,7 @@ export default {
                 } else {
                     newVoteValue = voteValue;
                 }
-
+                userVote.value = newVoteValue;
                 try {
                     context.emit('vote-changed', { postId: props.post.id, change: newVoteValue - currentVote });
                     await store.dispatch('vote', {
@@ -70,10 +74,12 @@ export default {
         };
 
         const upvote = () => {
+            event.stopPropagation();
             vote(1);
         };
 
         const downvote = () => {
+            event.stopPropagation();
             vote(-1);
         };
 
@@ -87,7 +93,8 @@ export default {
             downvote,
             trimmedContent,
             userVote,
-            isAuthenticated
+            isAuthenticated,
+            navigateToPost,
         };
     }
 };
@@ -98,10 +105,21 @@ export default {
 .post {
     border: 1px solid #ddd;
     padding: 20px;
+    padding-bottom: 30px;
     margin-bottom: 15px;
     display: flex;
     align-items: flex-start;
     border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    &:hover {
+        background-color: #f5f5f5;
+    }
+}
+
+.community-name{
+    padding: 0px;
+    margin-bottom: 5px;
 }
 
 .post-content {
@@ -112,12 +130,6 @@ h2 {
     font-size: 1.5rem;
     margin-bottom: 10px;
 }
-
-.router-link-exact-active {
-    color: #007bff;
-    text-decoration: none;
-}
-
 .votes {
     display: flex;
     flex-direction: column;
