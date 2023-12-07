@@ -1,0 +1,45 @@
+// modules/posts.js
+
+const state = {
+  posts: [] // Assuming you have an array of posts in your state
+};
+
+const mutations = {
+  UPDATE_POST(state, { postId, newContent }) {
+    const postToUpdate = state.posts.find(post => post.id === postId);
+
+    if (postToUpdate) {
+      postToUpdate.content = newContent;
+    }
+  },
+
+};
+
+const actions = {
+  async editPost({ commit }, { postId, newContent }) {
+    try {
+      // Update the post content in the database (Firebase or any other)
+      // ...
+
+      // Commit the UPDATE_POST mutation to update the state
+      commit('UPDATE_POST', { postId, newContent });
+
+      return true; 
+
+    } catch (error) {
+      console.error('Error updating post:', error);
+      return false; // Indicate failure if needed
+    }
+  },
+};
+
+const getters = {
+};
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  actions,
+  getters,
+};
