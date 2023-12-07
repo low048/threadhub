@@ -1,4 +1,4 @@
-import { runTransaction, increment, collection, getDoc, serverTimestamp, addDoc, doc } from 'firebase/firestore';
+import { runTransaction, increment, collection, getDoc, serverTimestamp, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 
 export default {
@@ -39,6 +39,7 @@ export default {
 
         const newCommentRef = await addDoc(collection(db, 'posts', postId, 'comments'), {
           author: user.email,
+          authorId: user.uid, // Include authorId here
           content: commentWithLineBreaks,
           votes: 0,
           timestamp: serverTimestamp(),
@@ -52,6 +53,7 @@ export default {
           id: newCommentId,
           postId: postId, // Include postId here
           author: user.email,
+          authorId: user.uid, // Include authorId here
           content: commentWithLineBreaks,
           votes: 0,
           timestamp: new Date(),
@@ -115,47 +117,51 @@ export default {
         console.error("Error voting on comment: ", error);
       }
     },
-    async editComment({ state, commit, dispatch }, { postId, commentId, updatedContent }) {
+    async editComment({commit, dispatch, rootState }, { postId, commentId, updatedContent }) {
       try {
-        const commentRef = doc(db, 'posts', postId, 'comments', commentId);
+        // Use rootState to access the auth state
+        const authUser = rootState.auth.user;
 
-        // Fetch the existing comment data
-        const commentDoc = await getDoc(commentRef);
+        // Check if the user is authenticated
+        if (authUser) {
+          const commentRef = doc(db, 'posts', postId, 'comments', commentId);
 
-        if (commentDoc.exists() && commentDoc.data()) {
-          const previousCommentDetails = {
-            id: commentDoc.id,
-            postId: postId, // Include postId here
-            author: commentDoc.data().author,
-            content: commentDoc.data().content,
-            votes: commentDoc.data().votes,
-            timestamp: commentDoc.data().timestamp.toDate(),
-          };
+          // Fetch the existing comment data
+          const commentDoc = await getDoc(commentRef);
 
-          // Update the comment content in the database
-          await updateDoc(commentRef, {
-            content: updatedContent,
-            timestamp: serverTimestamp(), // Update the timestamp to reflect the edit
-          });
+          if (commentDoc.exists() && commentDoc.data()) {
+            const previousCommentDetails = {
+              id: commentDoc.id,
+              postId: postId, // Include postId here
+              author: commentDoc.data().author,
+              content: commentDoc.data().content,
+              votes: commentDoc.data().votes,
+              timestamp: commentDoc.data().timestamp.toDate(),
+            };
+            // Update the comment content in the database
+            await updateDoc(commentRef, {
+              content: updatedContent,
+              timestamp: serverTimestamp(), // Update the timestamp to reflect the edit
+            });
 
-          // Construct the updated comment details
-          const updatedCommentDetails = {
-            ...previousCommentDetails,
-            content: updatedContent,
-            timestamp: new Date(), // Update the timestamp in the local state
-          };
+            // Construct the updated comment details
+            const updatedCommentDetails = {
+              ...previousCommentDetails,
+              content: updatedContent,
+              timestamp: new Date(), // Update the timestamp in the local state
+            };
 
-          // Update the comment details in the local state using the mutation
-          commit('UPDATE_COMMENT', updatedCommentDetails);
+            // Update the comment details in the local state using the mutation
+            commit('UPDATE_COMMENT', updatedCommentDetails);
 
-          // If necessary, fetch the user's updated vote after the edit
-          dispatch('fetchUserCommentVote', { userId: state.auth.user.uid, postId, commentId });
-
-          // You can also dispatch other actions or perform additional logic as needed
-
-          console.log(`Comment ${commentId} edited successfully!`);
+            // If necessary, fetch the user's updated vote after the edit
+            dispatch('fetchUserCommentVote', { userId: authUser.uid, postId, commentId });
+            console.log(`Comment ${commentId} edited successfully!`);
+          } else {
+            console.error(`Comment ${commentId} not found.`);
+          }
         } else {
-          console.error(`Comment ${commentId} not found.`);
+          console.error("User not authenticated.");
         }
 
       } catch (error) {
