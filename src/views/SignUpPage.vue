@@ -1,7 +1,7 @@
 <template>
   <div class="auth-container">
     <!--<p>Already a user? <router-link to="/login">Log in</router-link></p>-->
-    <form @submit.prevent="login">
+    <form @submit.prevent="signUp">
       <div>
         <input type="email" id="email" v-model="email" required placeholder="Email" />
       </div>
