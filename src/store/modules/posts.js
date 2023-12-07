@@ -32,6 +32,26 @@ export default {
         console.log("post.comments = [...post.comments, comment]");
       }
     },
+    EDIT_COMMENT(state, { commentId, editedContent }) {
+      console.log("Editing comment with ID: ", commentId);
+      state.postList.forEach(post => {
+        const commentIndex = post.comments.findIndex(comment => comment.id === commentId);
+        if (commentIndex !== -1) {
+          post.comments[commentIndex].content = editedContent;
+          console.log("Comment edited successfully");
+        }
+      });
+    },
+    DELETE_COMMENT(state, commentId) {
+      console.log("Deleting comment with ID: ", commentId);
+      state.postList.forEach(post => {
+        const commentIndex = post.comments.findIndex(comment => comment.id === commentId);
+        if (commentIndex !== -1) {
+          post.comments.splice(commentIndex, 1);
+          console.log("Comment deleted successfully");
+        }
+      });
+    },
     UPDATE_VOTE_COUNT(state, { postId, newVoteCount }) {
       const post = findPostById(state, postId);
       if (post) post.votes = newVoteCount;

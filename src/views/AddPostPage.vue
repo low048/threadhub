@@ -4,7 +4,7 @@
             <h1 class="post-title">Add New Post in c/{{ communityId }}</h1>
             <form @submit.prevent="addPost" class="add-post-form">
                 <input type="text" v-model="title" placeholder="Post Title" required class="post-input">
-                <textarea v-model="content" placeholder="Post Content" required class="post-input"></textarea>
+                <textarea v-model="content" placeholder="Post Content" required class="post-input" :style="{height: '30vh'}"></textarea>
                 <button type="submit" class="add-post-button">Add Post</button>
             </form>
         </div>
@@ -56,6 +56,9 @@ export default {
 
   
 <style scoped>
+h1 {
+  color: var(--primary-text-color);
+}
 .add-post-container {
     max-width: 50vw;
     margin: 0 auto;
@@ -63,7 +66,8 @@ export default {
 }
 
 .add-post {
-    border: 1px solid #ddd;
+    background-color: var(--primary-color);
+    border: 1px solid var(--border-color);
     padding: 20px;
     margin-bottom: 15px;
     border-radius: 5px;
@@ -80,27 +84,29 @@ export default {
 }
 
 .post-input {
-    border: 1px solid #ddd;
+    background-color: var(--primary-color-hover);
+    border: 1px solid var(--border-color);
     padding: 10px;
     border-radius: 5px;
     margin-bottom: 10px;
     width: 100%;
+    color: var(--primary-text-color);
 }
 
 .add-post-button {
-    background-color: #007BFF;
+    background-color: var(--secondary-color);
     color: white;
     border: none;
     border-radius: 5px;
     padding: 10px 20px;
     cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.3s ease;
     width: 20%;
     float: right;
 }
 
 .add-post-button:hover {
-    background-color: #0056b3;
+    background-color: var(--secondary-color-hover);
+    transition: background-color 0.3s ease;
 }
 </style>

@@ -88,9 +88,13 @@ export default {
     max-width: 60vw;
 }
 .spinner-container {
+  color: var(--primary-text-color);
   display: flex;
   align-items: center;
   justify-content: center;
   height: 70vh;
+}
+h3 {
+  color: var(--primary-text-color);
 }
 </style>

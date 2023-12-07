@@ -24,6 +24,7 @@ import PostComponent from '@/components/PostComponent.vue';
 
 export default {
     components: { PostComponent },
+
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -61,7 +62,7 @@ export default {
         });
 
         return { communityPosts, communityDetails, loading, formatDate, goToAddPostPage };
-    }
+    },
 };
 </script>
   
@@ -86,15 +87,14 @@ export default {
 }
 
 #community-info {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   padding: 20px;
   margin-top: 20px;
   border-radius: 5px;
-  background-color: white;
+  background-color: var(--primary-color);
   max-height: 100vh;
   overflow: auto;
   flex: 0 0 20vw;
-  transition: background-color 0.2s ease;
 }
 
 #community-posts {
@@ -104,32 +104,34 @@ export default {
 }
 
 h3 {
+  color: var(--primary-text-color);
   font-size: 1.2rem;
   margin-bottom: 15px;
 }
 
 .author, .description, .timestamp {
   font-size: 0.9rem;
-  color: #555;
+  color: var(--secondary-text-color);;
   margin-bottom: 10px;
 }
 .addpost-button {
-    background-color: #007BFF;
+    background-color: var(--secondary-color);
     color: white;
     border: none;
     border-radius: 5px;
     padding: 10px 20px;
     cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.3s ease;
     margin-top: 10px;
     margin-bottom: 10px;
     width: 100%;
 }
 .addpost-button:hover {
-    background-color: #0056b3;
+    background-color: var(--secondary-color-hover);
+    transition: background-color 0.3s ease;
 }
 .spinner-container {
+  color: var(--primary-text-color);
   display: flex;
   align-items: center;
   justify-content: center;

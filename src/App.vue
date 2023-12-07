@@ -6,7 +6,7 @@
       </h1>
       <div class="header-buttons">
         <button v-if="!isAuthenticated" @click="goToLogin">Log In</button>
-        <button v-if="!isAuthenticated" @click="goToSignUp">Sign Up</button>
+        <!--<button v-if="!isAuthenticated" @click="goToSignUp">Sign Up</button>-->
         <div v-if="isAuthenticated" class="user-info">
           <p class="welcome-text">Welcome, {{ userEmail }}</p>
           <button @click="logout">Log Out</button>
@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
@@ -29,10 +29,9 @@ export default {
   setup() {
     const store = useStore();
     const router = useRouter();
-
+    const darkMode = ref(localStorage.getItem('darkMode') === 'true');
     const isAuthenticated = computed(() => store.getters.isAuthenticated);
     const userEmail = computed(() => store.state.auth.user?.email || '');
-    const darkMode = computed(() => store.getters.isDarkMode);
     const toggleDarkModeLabel = computed(() => (darkMode.value ? '☀️' : '🌙'));
 
     const goToLogin = () => {
@@ -44,7 +43,8 @@ export default {
     };
 
     const toggleDarkMode = () => {
-      store.dispatch('toggleDarkMode');
+      darkMode.value = !darkMode.value;
+      localStorage.setItem('darkMode', darkMode.value);
     };
 
     const logout = () => {
@@ -57,22 +57,54 @@ export default {
 </script>
 
 <style>
+:root {
+  --app-color: #efefef;
+  --primary-color: #ffffff;
+  --primary-color-hover: #f5f5f5; 
+  --secondary-color: #007bff;
+  --secondary-color-hover: #0056b3;
+  --primary-text-color: #212529;
+  --secondary-text-color: #666666;
+  --border-color: #d6d6d6;
+  --invert-value: 100%;
+  --invert-value-hover: 60%;
+}
+
+.dark {
+  --app-color: #030303;
+  --primary-color: #1a1a1b;
+  --primary-color-hover: #3e3e41; 
+  --secondary-color: #007bff;
+  --secondary-color-hover: #0056b3;
+  --primary-text-color: #f8f9fa;
+  --secondary-text-color: #ced4da;
+  --border-color: #3d3d3d;
+  --invert-value: 0%;
+  --invert-value-hover: 40%;
+}
+
+#app{
+  background-color: var(--app-color);
+  height: 100vh;
+  overflow-y: auto;
+}
 header {
-  background-color: #007bff;
-  color: #007bff;
-  padding: 15px;
+  background-color: var(--secondary-color);
+  padding: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-header h1 {
+h1 {
   margin: 0;
 }
 
 .header-link {
   color: white;
   text-decoration: none;
+  font-size:xx-large;
+  margin-left:5px;
 }
 
 .header-link:hover {
@@ -85,19 +117,18 @@ header h1 {
 }
 
 .header-buttons button {
-  background-color: white;
-  color: #007bff;
-  border: 1px solid white;
+  color: var(--primary-text-color);
+  background-color: var(--primary-color);
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 10px 20px;
   margin-left: 10px;
   cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
 }
 
 .header-buttons button:hover {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--primary-color-hover);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .user-info {
@@ -113,40 +144,5 @@ header h1 {
 
 .content {
   margin: 20px;
-}
-
-:root {
-  --primary-color: #212529;
-  --secondary-color: #343a40;
-  --text-color: #f8f9fa;
-  --button-background-color: #f8f9fa;
-  --button-text-color: #212529;
-}
-
-.dark header {
-  background-color: var(--primary-color);
-  color: var(--text-color);
-}
-
-.dark .header-link {
-  color: var(--text-color);
-}
-
-.dark .header-buttons button {
-  background-color: var(--button-background-color);
-  color: var(--button-text-color);
-}
-
-.dark .header-buttons button:hover {
-  background-color: var(--secondary-color);
-}
-
-.dark .user-info .welcome-text {
-  color: var(--text-color);
-}
-
-.dark .content {
-  color: var(--text-color);
-  background-color: var(--secondary-color);
 }
 </style>

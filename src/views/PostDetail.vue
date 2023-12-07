@@ -1,6 +1,8 @@
 <template>
     <div class="post-container">
-        <div class="loading-post" v-if="loading">Loading post...</div>
+        <div class="spinner-container" v-if="loading">
+          <div class="spinner-border" role="status"></div>
+        </div>
         <div v-else class="fade-in">
             <div class="post">
                 <div class="votes">
@@ -63,6 +65,7 @@ export default {
                 await store.dispatch('fetchSinglePost', { communityId: communityId, postId });
                 console.log("fetched single post from postdetails");
             }
+            loading.value = false;
         });
 
         const post = computed(() => {
@@ -70,7 +73,7 @@ export default {
         });
 
         const newComment = ref('');
-        const loading = ref(false);
+        const loading = ref(true);
         const isAuthenticated = computed(() => store.getters.isAuthenticated);
         const comments = computed(() => {
             if (!post.value || !post.value.comments) {
@@ -179,30 +182,30 @@ export default {
     opacity: 1;
   }
 }
+p, h1, h2 {
+    color: var(--primary-text-color);
+}
 .post-container {
     max-width: 50vw;
     margin: 0 auto;
     padding: 20px;
 }
-
 .post {
-    border: 1px solid #ddd;
+    background-color: var(--primary-color);
+    border: 1px solid var(--border-color);
     padding: 20px;
     margin-bottom: 15px;
     display: flex;
     align-items: flex-start;
     border-radius: 5px;
 }
-
 .post-content {
     margin-left: 20px;
 }
-
 .post-title {
     font-size: 1.75rem;
     margin-bottom: 10px;
 }
-
 .votes {
     display: flex;
     flex-direction: column;
@@ -210,14 +213,12 @@ export default {
     justify-content: space-between;
     height: 72px;
 }
-
 .vote-button {
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
 }
-
 .vote-image {
     width: 24px;
     height: 24px;
@@ -228,15 +229,15 @@ export default {
     height: 18px;
     text-align: center;
 }
-
 .comment-input {
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
     padding: 10px;
     border-radius: 5px;
     width: 100%;
     margin-bottom: 10px;
 }
-
 .comment-button {
     background-color: #007BFF;
     color: white;
@@ -245,21 +246,25 @@ export default {
     padding: 10px 20px;
     cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.3s ease;
     margin-bottom: 10px;
 }
-
 .comment-button:hover {
-    background-color: #0056b3;
+    background-color: var(--secondary-color-hover);
+    transition: background-color 0.3s ease;
 }
-
 .loading-post {
     text-align: center;
 }
-
 .author-timestamp {
-    color: #666;
+    color: var(--secondary-text-color);
     font-size: 0.9rem;
     margin-top: 10px;
+}
+.spinner-container {
+  color: var(--primary-text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
 }
 </style>

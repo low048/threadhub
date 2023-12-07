@@ -11,9 +11,14 @@
                     alt="Downvote" class="vote-image">
             </button>
         </div>
+
         <div class="comment-content">
             <p><strong>{{ comment.author }}</strong>: <span v-html="comment.content"></span></p>
             <p class="comment-timestamp">Commented at: {{ comment.timestamp.toLocaleString() }}</p>
+        </div>
+        <div class="edit-delete-icons" v-if="isAuthor(comment.author)">
+            <img src="@/assets/edit.png" alt="Edit Post" class="edit-icon" @click="editComment">
+            <img src="@/assets/delete.png" alt="Delete Post" class="delete-icon" @click="deleteComment">
         </div>
     </div>
 </template>
@@ -47,6 +52,41 @@ export default {
         },
         downvoteComment() {
             this.voteComment(-1);
+        },
+        isAuthor(commentAuthor) {
+            console.log("commentAuthor: ", commentAuthor);
+            const loggedInUser = this.$store.state.auth.user;
+            return loggedInUser && loggedInUser.email === commentAuthor;
+        },
+        async editComment() {
+            try {
+                const editedContent = prompt("Edit your comment:", this.comment.content);
+                if (editedContent !== null) {
+                    await this.$store.dispatch('editComment', {
+                        communityId: this.communityId,
+                        postId: this.postId,
+                        commentId: this.comment.id,
+                        editedContent
+                    });
+                }
+            } catch (error) {
+                console.error("Error editing comment:", error);
+            }
+        },
+
+        async deleteComment() {
+            try {
+                const confirmDelete = confirm("Are you sure you want to delete this comment?");
+                if (confirmDelete) {
+                await this.$store.dispatch('deleteComment', {
+                    communityId: this.communityId,
+                    postId: this.postId,
+                    commentId: this.comment.id
+                });
+                }
+            } catch (error) {
+                console.error("Error deleting comment:", error);
+            }
         },
         async voteComment(voteValue) {
             if (this.$store.state.auth.user) {
@@ -85,8 +125,33 @@ export default {
 </script>
 
 <style scoped>
+.edit-delete-icons {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-top: auto; /* Pushes the icons to the bottom */
+  margin-left: auto;
+}
+
+.edit-icon,
+.delete-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  cursor: pointer;
+  filter: invert(var(--invert-value));
+}
+.edit-icon:hover,
+.delete-icon:hover {
+  filter: invert(var(--invert-value-hover));
+}
+p {
+    color: var(--primary-text-color);
+}
 .comment-box {
-    border: 1px solid #ddd;
+    background-color: var(--primary-color);
+    border: 1px solid var(--border-color);
     padding: 20px;
     margin-bottom: 15px;
     display: flex;
@@ -134,7 +199,7 @@ export default {
 }
 
 .comment-timestamp {
-    color: #666;
+    color: var(--secondary-text-color);
     font-size: 0.9rem;
     margin-top: 10px;
 }

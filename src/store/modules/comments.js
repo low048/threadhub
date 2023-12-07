@@ -1,4 +1,4 @@
-import { runTransaction, increment, collection, getDoc, serverTimestamp, addDoc, doc } from 'firebase/firestore';
+import { runTransaction, increment, collection, getDoc, serverTimestamp, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 
 export default {
@@ -84,6 +84,27 @@ export default {
         return voteValue;
       } catch (error) {
         console.error("Error voting on comment: ", error);
+      }
+    },
+    async editComment({ commit }, { communityId, postId, commentId, editedContent }) {
+      try {
+        const commentRef = doc(db, 'communities', communityId, 'posts', postId, 'comments', commentId);
+        await updateDoc(commentRef, {
+          content: editedContent,
+          timestamp: serverTimestamp(),
+        });
+        commit('EDIT_COMMENT', { commentId, editedContent });
+      } catch (error) {
+        console.error("Error editing comment:", error);
+      }
+    },
+    async deleteComment({ commit }, { communityId, postId, commentId }) {
+      try {
+        const commentRef = doc(db, 'communities', communityId, 'posts', postId, 'comments', commentId);
+        await deleteDoc(commentRef);
+        commit('DELETE_COMMENT', commentId);
+      } catch (error) {
+        console.error("Error deleting comment:", error);
       }
     },
   },

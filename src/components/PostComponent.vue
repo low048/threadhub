@@ -103,7 +103,9 @@ export default {
 
 <style scoped>
 .post {
-    border: 1px solid #ddd;
+    background-color: var(--primary-color);
+    border: 1px solid var(--border-color);
+    filter: invert(--invert-value);
     padding: 20px;
     padding-bottom: 30px;
     margin-bottom: 15px;
@@ -111,10 +113,11 @@ export default {
     align-items: flex-start;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.post:hover {
+    background-color: var(--primary-color-hover);
     transition: background-color 0.2s ease;
-    &:hover {
-        background-color: #f5f5f5;
-    }
 }
 
 .community-name{
@@ -129,6 +132,11 @@ export default {
 h2 {
     font-size: 1.5rem;
     margin-bottom: 10px;
+    color: var(--primary-text-color);
+}
+
+p {
+    color: var(--primary-text-color);
 }
 .votes {
     display: flex;
