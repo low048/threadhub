@@ -1,17 +1,16 @@
 <template>
+    <div class="spinner-container" v-if="loading">
+        <div class="spinner-border" role="status"></div>
+    </div>
     <div class="homepage-layout">
-        <div id="community-list">
+        <div id="community-list" v-if="!loading" class="fade-in">
             <h3>Communities</h3>
             <community-component v-for="community in communities" :key="community.id"
                 :community="community"></community-component>
         </div>
-        <div id="featured-posts">
+        <div id="featured-posts" v-if="!loading" class="fade-in">
             <h3>Featured Posts</h3>
-            <div class="loading-posts" v-if="loading">Loading posts...</div>
-            <div v-else>
-                <post-component v-for="post in featuredPosts" :key="post.id" :post="post" :showCommunityId="true"></post-component>
-                
-            </div>
+            <PostComponent v-for="post in featuredPosts" :key="post.id" :post="post" :showCommunityId="true"/>
         </div>
     </div>
 </template>
@@ -31,7 +30,6 @@ export default {
         const store = useStore();
 
         const loading = ref(true);
-
         const communities = computed(() => store.getters['allCommunities']);
 
         const featuredPosts = computed(() => {
@@ -58,9 +56,23 @@ export default {
 
 
 <style scoped>
+.fade-in {
+  opacity: 0;
+  animation: fade-in-animation 0.3s ease-in forwards;
+}
+
+@keyframes fade-in-animation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .homepage-layout {
     display: flex;
     align-items: flex-start;
+    justify-content: center;
 }
 
 #community-list {
@@ -75,8 +87,10 @@ export default {
     padding: 20px;
     max-width: 60vw;
 }
-
-.loading-posts {
-    text-align: center;
+.spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
 }
 </style>

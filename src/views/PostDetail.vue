@@ -1,7 +1,7 @@
 <template>
     <div class="post-container">
         <div class="loading-post" v-if="loading">Loading post...</div>
-        <div v-else>
+        <div v-else class="fade-in">
             <div class="post">
                 <div class="votes">
                     <button @click="upvote" class="vote-button">
@@ -166,6 +166,19 @@ export default {
 </script>
 
 <style scoped>
+.fade-in {
+  opacity: 0;
+  animation: fade-in-animation 0.1s ease-in forwards;
+}
+
+@keyframes fade-in-animation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .post-container {
     max-width: 50vw;
     margin: 0 auto;

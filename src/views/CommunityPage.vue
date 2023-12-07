@@ -1,26 +1,19 @@
 <template>
-    <div class="community-layout">
-        <div id="community-info">
-            <div v-if="loading">
-                Loading community details...
-            </div>
-            <div v-else>
-                <h3>{{ "c/" + communityDetails.id }}</h3>
-                <p class="description">{{ communityDetails.description }}</p>
-                <p class="author">Created by: {{ communityDetails.author }}</p>
-                <p class="timestamp">Created on: {{ formatDate(communityDetails.timestamp) }}</p>
-            </div>
-        </div>
-        <div id="community-posts">
-            <div class="loading-posts" v-if="loading">
-                Loading posts...
-            </div>
-            <div v-else>
-                <post-component v-for="post in communityPosts" :key="post.id" :post="post"></post-component>
-                <button class="addpost-button" @click="goToAddPostPage">Add Post</button>
-            </div>
-        </div>
-    </div>
+  <div class="community-layout">
+      <div class="spinner-container" v-if="loading">
+          <div class="spinner-border" role="status"></div>
+      </div>
+      <div id="community-info" v-if="!loading" class="fade-in">
+          <h3>{{ "c/" + communityDetails.id }}</h3>
+          <p class="description">{{ communityDetails.description }}</p>
+          <p class="author">Created by: {{ communityDetails.author }}</p>
+          <p class="timestamp">Created on: {{ formatDate(communityDetails.timestamp) }}</p>
+          <button class="addpost-button" @click="goToAddPostPage">Add Post</button>
+      </div>
+      <div id="community-posts" v-if="!loading" class="fade-in">
+          <post-component v-for="post in communityPosts" :key="post.id" :post="post"></post-component>
+      </div>
+  </div>
 </template>
 
 <script>
@@ -73,9 +66,23 @@ export default {
 </script>
   
 <style scoped>
+.fade-in {
+  opacity: 0;
+  animation: fade-in-animation 0.3s ease-in forwards;
+}
+
+@keyframes fade-in-animation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .community-layout {
   display: flex;
   align-items: flex-start;
+  justify-content: center;
 }
 
 #community-info {
@@ -83,10 +90,10 @@ export default {
   padding: 20px;
   margin-top: 20px;
   border-radius: 5px;
-  background-color: white; /* Optional: Adjust based on your design */
+  background-color: white;
   max-height: 100vh;
   overflow: auto;
-  flex: 0 0 20vw; /* Adjust width as needed */
+  flex: 0 0 20vw;
   transition: background-color 0.2s ease;
 }
 
@@ -104,12 +111,8 @@ h3 {
 .author, .description, .timestamp {
   font-size: 0.9rem;
   color: #555;
+  margin-bottom: 10px;
 }
-
-.loading-posts {
-  text-align: center;
-}
-
 .addpost-button {
     background-color: #007BFF;
     color: white;
@@ -119,10 +122,17 @@ h3 {
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.3s ease;
+    margin-top: 10px;
     margin-bottom: 10px;
+    width: 100%;
 }
-
 .addpost-button:hover {
     background-color: #0056b3;
+}
+.spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
 }
 </style>

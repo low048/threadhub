@@ -1,11 +1,11 @@
 <template>
     <div class="add-post-container">
         <div class="add-post">
-            <h1 class="post-title">Add New Post</h1>
+            <h1 class="post-title">Add New Post in c/{{ communityId }}</h1>
             <form @submit.prevent="addPost" class="add-post-form">
                 <input type="text" v-model="title" placeholder="Post Title" required class="post-input">
                 <textarea v-model="content" placeholder="Post Content" required class="post-input"></textarea>
-                <button type="submit" class="comment-button">Add Post</button>
+                <button type="submit" class="add-post-button">Add Post</button>
             </form>
         </div>
     </div>
@@ -87,7 +87,7 @@ export default {
     width: 100%;
 }
 
-.comment-button {
+.add-post-button {
     background-color: #007BFF;
     color: white;
     border: none;
@@ -96,9 +96,11 @@ export default {
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.3s ease;
+    width: 20%;
+    float: right;
 }
 
-.comment-button:hover {
+.add-post-button:hover {
     background-color: #0056b3;
 }
 </style>

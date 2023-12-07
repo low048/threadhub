@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" :class="{ dark: darkMode }">
     <header>
       <h1>
         <router-link to="/" class="header-link">threadhub</router-link>
@@ -11,6 +11,7 @@
           <p class="welcome-text">Welcome, {{ userEmail }}</p>
           <button @click="logout">Log Out</button>
         </div>
+        <button style="font-size: x-large; padding: 4px;" @click="toggleDarkMode">{{ toggleDarkModeLabel }}</button>
       </div>
     </header>
     <div class="content">
@@ -31,6 +32,8 @@ export default {
 
     const isAuthenticated = computed(() => store.getters.isAuthenticated);
     const userEmail = computed(() => store.state.auth.user?.email || '');
+    const darkMode = computed(() => store.getters.isDarkMode);
+    const toggleDarkModeLabel = computed(() => (darkMode.value ? '☀️' : '🌙'));
 
     const goToLogin = () => {
       router.push({ name: 'LoginPage' });
@@ -40,11 +43,15 @@ export default {
       router.push({ name: 'SignUpPage' });
     };
 
+    const toggleDarkMode = () => {
+      store.dispatch('toggleDarkMode');
+    };
+
     const logout = () => {
       store.dispatch('logout');
     };
 
-    return { isAuthenticated, userEmail, goToLogin, goToSignUp, logout };
+    return { isAuthenticated, userEmail, darkMode, toggleDarkModeLabel, goToLogin, goToSignUp, logout, toggleDarkMode };
   }
 };
 </script>
@@ -106,5 +113,40 @@ header h1 {
 
 .content {
   margin: 20px;
+}
+
+:root {
+  --primary-color: #212529;
+  --secondary-color: #343a40;
+  --text-color: #f8f9fa;
+  --button-background-color: #f8f9fa;
+  --button-text-color: #212529;
+}
+
+.dark header {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+.dark .header-link {
+  color: var(--text-color);
+}
+
+.dark .header-buttons button {
+  background-color: var(--button-background-color);
+  color: var(--button-text-color);
+}
+
+.dark .header-buttons button:hover {
+  background-color: var(--secondary-color);
+}
+
+.dark .user-info .welcome-text {
+  color: var(--text-color);
+}
+
+.dark .content {
+  color: var(--text-color);
+  background-color: var(--secondary-color);
 }
 </style>
