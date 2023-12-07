@@ -1,0 +1,46 @@
+<!-- PostDetail.vue -->
+
+<template>
+  <div>
+    <!-- Your component template here -->
+
+    <div v-else>
+      <!-- Display textarea when editing, pre-filled with post.content -->
+      <textarea v-model="post.content"></textarea>
+      <button @click="savePostEdit">Save</button>
+      <button @click="cancelEdit">Cancel</button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+
+  methods: {
+    async savePostEdit() {
+      const { postId, content } = this.post;
+
+      const success = await this.$store.dispatch('posts/editPost', { postId, newContent: content });
+
+      if (success) {
+      } else {
+      }
+
+      this.isEditing = false;
+    },
+
+    cancelEdit() {
+      // Revert changes by fetching the original post content
+      // Assuming you have a method to fetch the original content based on postId
+      // You may also keep a copy of the original content in your component's data
+      // Example: this.originalContent = this.post.content;
+
+      // Fetch the original content (replace with your logic)
+      // this.post.content = this.originalContent;
+
+      // Reset the edit mode
+      this.isEditing = false;
+    },
+  },
+};
+</script>
