@@ -1,4 +1,4 @@
-import { runTransaction, increment, collection, getDoc, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { runTransaction, increment, collection, getDoc, getDocs, doc, setDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 
 const findPostById = (state, postId) => {
@@ -28,10 +28,13 @@ export default {
       const post = findPostById(state, comment.postId);
       console.log(post);
       if (post) {
+        if (!post.comments) {
+          post.comments = [];
+        }
         post.comments = [...post.comments, comment];
         console.log("post.comments = [...post.comments, comment]");
       }
-    },
+    },    
     EDIT_COMMENT(state, { commentId, editedContent }) {
       console.log("Editing comment with ID: ", commentId);
       state.postList.forEach(post => {
@@ -65,6 +68,18 @@ export default {
       if (post.votes === undefined) post.votes = 0;
       if (post.timestamp === undefined) post.timestamp = new Date();
       state.postList.unshift(post);
+    },
+    EDIT_POST(state, { postId, editedContent }) {
+      const postIndex = state.postList.findIndex(post => post.id === postId);
+      if (postIndex !== -1) {
+        state.postList[postIndex].content = editedContent;
+      }
+    },
+    DELETE_POST(state, postId) {
+      const postIndex = state.postList.findIndex(post => post.id === postId);
+      if (postIndex !== -1) {
+        state.postList.splice(postIndex, 1);
+      }
     },
   },
   actions: {
@@ -228,6 +243,10 @@ export default {
         const user = rootGetters.currentUser || rootState.auth.user;
         postData.author = user.email;
 
+        if (postData.content) {
+          postData.content = postData.content.replace(/\n/g, '<br>');
+        }
+
         const postsColRef = collection(db, `communities/${communityId}/posts`); //communityId.value if it's passed as a ref, yet to be decided
         const newPostRef = doc(postsColRef);
         await setDoc(newPostRef, {
@@ -243,6 +262,24 @@ export default {
         console.error("Error adding new post:", error);
       }
     },
+    async editPost({ commit }, { communityId, postId, editedContent }) {
+      try {
+        const postRef = doc(db, 'communities', communityId, 'posts', postId);
+        await updateDoc(postRef, { content: editedContent, timestamp: serverTimestamp() });
+        commit('EDIT_POST', { postId, editedContent });
+      } catch (error) {
+        console.error("Error editing post:", error);
+      }
+    },
+    async deletePost({ commit }, { communityId, postId }) {
+      try {
+        const postRef = doc(db, 'communities', communityId, 'posts', postId);
+        await deleteDoc(postRef);
+        commit('DELETE_POST', postId);
+      } catch (error) {
+        console.error("Error deleting post:", error);
+      }
+    }
   },
   getters: {
     getPostVotes: (state) => (postId) => {

@@ -5,6 +5,7 @@ import LoginPage from '../views/LoginPage.vue';
 import SignUpPage from '../views/SignUpPage.vue';
 import AddPostPage from '../views/AddPostPage.vue';
 import CommunityPage from '../views/CommunityPage.vue';
+import AddCommunityPage from '../views/AddCommunityPage.vue';
 import store from '@/store';
 
 const routes = [
@@ -42,11 +43,13 @@ const routes = [
     component: CommunityPage, 
     props: true
   },
-  /*{
-    path: '/test-community',
-    name: 'TestCommunityPage',
-    component: CommunityPage
-  },*/
+  {
+    path: '/add-community',
+    name: 'AddCommunityPage',
+    component: AddCommunityPage,
+    props: true,
+    meta: { requiresAuth: true }
+  },
 ];
 
 const router = createRouter({

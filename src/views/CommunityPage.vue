@@ -6,11 +6,14 @@
       <div id="community-info" v-if="!loading" class="fade-in">
           <h3>{{ "c/" + communityDetails.id }}</h3>
           <p class="description">{{ communityDetails.description }}</p>
-          <p class="author">Created by: {{ communityDetails.author }}</p>
+          <p class="author">Created by: {{ "u/" + communityDetails.author }}</p>
           <p class="timestamp">Created on: {{ formatDate(communityDetails.timestamp) }}</p>
           <button class="addpost-button" @click="goToAddPostPage">Add Post</button>
       </div>
       <div id="community-posts" v-if="!loading" class="fade-in">
+          <div v-if="communityPosts.length === 0" class="no-posts-message">
+            No posts to show.
+          </div>
           <post-component v-for="post in communityPosts" :key="post.id" :post="post"></post-component>
       </div>
   </div>
@@ -136,5 +139,14 @@ h3 {
   align-items: center;
   justify-content: center;
   height: 70vh;
+}
+
+.no-posts-message {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: var(--primary-text-color);
 }
 </style>

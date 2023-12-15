@@ -126,12 +126,10 @@ export default {
 
 <style scoped>
 .edit-delete-icons {
-  position: relative;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  margin-top: auto; /* Pushes the icons to the bottom */
-  margin-left: auto;
 }
 
 .edit-icon,
@@ -157,10 +155,14 @@ p {
     display: flex;
     align-items: flex-start;
     border-radius: 5px;
+    position: relative;
+    overflow: hidden;
 }
 
 .comment-content {
     margin-left: 20px;
+    word-wrap: break-word;
+    overflow-wrap: break-word; 
 }
 
 .comment-author {

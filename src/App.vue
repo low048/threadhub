@@ -66,8 +66,8 @@ export default {
   --primary-text-color: #212529;
   --secondary-text-color: #666666;
   --border-color: #d6d6d6;
-  --invert-value: 100%;
-  --invert-value-hover: 60%;
+  --invert-value: 80%;
+  --invert-value-hover: 40%;
 }
 
 .dark {
@@ -79,8 +79,8 @@ export default {
   --primary-text-color: #f8f9fa;
   --secondary-text-color: #ced4da;
   --border-color: #3d3d3d;
-  --invert-value: 0%;
-  --invert-value-hover: 40%;
+  --invert-value: 20%;
+  --invert-value-hover: 60%;
 }
 
 #app{
