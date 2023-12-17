@@ -4,6 +4,10 @@
           <div class="spinner-border" role="status"></div>
       </div>
       <div id="community-info" v-if="!loading" class="fade-in">
+          <div class="edit-delete-icons" v-if="isAuthor(communityDetails.author)">
+            <img src="@/assets/edit.png" alt="Edit Community" class="edit-icon" @click="goToEditCommunityPage">
+            <img src="@/assets/delete.png" alt="Delete Community" class="delete-icon" @click="deleteCommunity">
+          </div>
           <h3>{{ "c/" + communityDetails.id }}</h3>
           <p class="description">{{ communityDetails.description }}</p>
           <p class="author">Created by: {{ "u/" + communityDetails.author }}</p>
@@ -37,7 +41,6 @@ export default {
         const loading = ref(true);
 
         const communityPosts = computed(() => {
-            // Logic to filter posts for this community
             return store.state.posts.postList.filter(post => post.communityId === communityId.value);
         });
 
@@ -53,6 +56,23 @@ export default {
             router.push({ name: 'AddPostPage', params: { communityId: communityDetails.value.id } });
         };
 
+        const goToEditCommunityPage = () => {
+            router.push({ name: 'EditCommunityPage', params: { communityId: communityDetails.value.id } });
+        };
+
+        const isAuthor = (communityAuthor) => {
+            const loggedInUser = store.state.auth.user;
+            return loggedInUser && loggedInUser.email === communityAuthor;
+        };
+
+        const deleteCommunity = () => {
+          const confirmDelete = confirm("Are you sure you want to delete this community?");
+          if (confirmDelete) {
+            store.dispatch('deleteCommunity', { communityId: communityId.value });
+            router.push({ name: 'Home' });
+          }
+        };
+
         onMounted(async () => {
             await store.dispatch('fetchCommunities');
             await store.dispatch('fetchPosts', communityId);
@@ -64,7 +84,7 @@ export default {
             }*/
         });
 
-        return { communityPosts, communityDetails, loading, formatDate, goToAddPostPage };
+        return { communityPosts, communityDetails, loading, formatDate, goToAddPostPage, isAuthor, goToEditCommunityPage, deleteCommunity};
     },
 };
 </script>
@@ -98,6 +118,7 @@ export default {
   max-height: 100vh;
   overflow: auto;
   flex: 0 0 20vw;
+  position: relative;
 }
 
 #community-posts {
@@ -148,5 +169,25 @@ h3 {
   margin-top: 20px;
   font-size: 1.2rem;
   color: var(--primary-text-color);
+}
+
+.edit-delete-icons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+}
+
+.edit-icon,
+.delete-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  cursor: pointer;
+  filter: invert(var(--invert-value));
+}
+.edit-icon:hover,
+.delete-icon:hover {
+  filter: invert(var(--invert-value-hover));
 }
 </style>

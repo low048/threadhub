@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 
 export default {
@@ -55,7 +55,25 @@ export default {
       } catch (error) {
         console.error("Error adding community:", error);
       }
-    }
+    },
+    async editCommunity({ commit }, { communityId, description }) {
+      try {
+        const communityRef = doc(db, 'communities', communityId);
+        await updateDoc(communityRef, { description });
+        commit('UPDATE_COMMUNITY', { communityId, description });
+      } catch (error) {
+        console.error("Error editing community:", error);
+      }
+    },
+    async deleteCommunity({ commit }, { communityId }) {
+      try {
+        const communityRef = doc(db, 'communities', communityId);
+        await deleteDoc(communityRef);
+        commit('REMOVE_COMMUNITY', communityId);
+      } catch (error) {
+        console.error("Error deleting community:", error);
+      }
+    },
   },
   getters: {
     allCommunities: state => {

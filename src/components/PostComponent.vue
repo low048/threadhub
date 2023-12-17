@@ -15,6 +15,7 @@
             <p class="community-name" v-if="showCommunityId">c/{{ post.communityId }}</p>
             <h2>{{ post.title }}</h2>
             <p v-html="trimmedContent(post.content)"></p>
+            <img v-if="post.imageUrl" :src="post.imageUrl" class="post-image">
         </div>
     </div>
 </template>
@@ -107,17 +108,23 @@ export default {
     border: 1px solid var(--border-color);
     filter: invert(--invert-value);
     padding: 20px;
+    padding-right: 50px;
     padding-bottom: 30px;
     margin-bottom: 15px;
     display: flex;
     align-items: flex-start;
     border-radius: 5px;
     cursor: pointer;
+    max-width: 70%;
 }
 
 .post:hover {
     background-color: var(--primary-color-hover);
     transition: background-color 0.2s ease;
+}
+
+.post-image{
+    max-width: 100%;
 }
 
 .community-name{

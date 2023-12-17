@@ -21,10 +21,10 @@
                     <div class="post-content">
                         <h1 class="post-title">{{ post.title }}</h1>
                         <p v-html="post.content"></p>
+                        <img v-if="post.imageUrl" :src="post.imageUrl" class="post-image">
                         <div v-if="post.timestamp">
                             <p class="author-timestamp">by u/{{ post.author }} at {{ post.timestamp.toLocaleString() }}</p>
                         </div>
-
                     </div>
                     <div class="edit-delete-icons" v-if="isAuthor(post.author)">
                             <img src="@/assets/edit.png" alt="Edit Post" class="edit-icon" @click="editPost">
@@ -223,10 +223,13 @@ export default {
 </script>
 
 <style scoped>
+.post-image{
+    max-width: 100%;
+}
 .content-container {
     display: flex;
     justify-content: center; /* Centers the post-container */
-    align-items: start;
+    align-items: flex-start;
     flex-wrap: wrap; /* Allows items to wrap if needed */
     opacity: 0;
     animation: fade-in-animation 0.1s ease-in forwards;
@@ -263,6 +266,9 @@ export default {
 }
 p, h1, h2 {
     color: var(--primary-text-color);
+}
+h2{
+    margin-top: 30px;
 }
 .post-container {
     max-width: 50vw;

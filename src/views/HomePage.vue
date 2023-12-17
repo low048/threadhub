@@ -123,9 +123,8 @@ h3 {
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    padding-left: 10px;
-    padding-right: 10px;
     margin-right: 10px;
+    font-size: 20px;
     width: 35px;
     height: 35px;
 }
