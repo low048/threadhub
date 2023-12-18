@@ -52,7 +52,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/:communityId/edit',
+    path: '/communities/:communityId/edit',
     name: 'EditCommunityPage',
     component: EditCommunityPage,
     props: true,

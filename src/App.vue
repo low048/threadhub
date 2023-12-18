@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
@@ -45,11 +45,24 @@ export default {
     const toggleDarkMode = () => {
       darkMode.value = !darkMode.value;
       localStorage.setItem('darkMode', darkMode.value);
+      if (darkMode.value) {
+        document.body.classList.add('dark');
+      } else {
+        document.body.classList.remove('dark');
+      }
     };
 
     const logout = () => {
       store.dispatch('logout');
     };
+
+    onMounted(() => {
+      if (darkMode.value) {
+        document.body.classList.add('dark');
+      } else {
+        document.body.classList.remove('dark');
+      }
+    });
 
     return { isAuthenticated, userEmail, darkMode, toggleDarkModeLabel, goToLogin, goToSignUp, logout, toggleDarkMode };
   }
@@ -83,11 +96,22 @@ export default {
   --invert-value-hover: 60%;
 }
 
+@media (max-width: 768px) {
+  .welcome-text{
+    display:none;
+  }
+}
+
+html body {
+  background-color: var(--app-color) !important;
+  overflow-x: hidden;
+}
+
 #app{
   background-color: var(--app-color);
-  height: 100vh;
-  overflow-y: auto;
+  min-height: 100vh;
 }
+
 header {
   background-color: var(--secondary-color);
   padding: 5px;

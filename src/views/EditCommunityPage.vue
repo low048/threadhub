@@ -48,7 +48,7 @@ h1 {
 }
 
 .edit-community-container {
-    max-width: 50vw;
+    max-width: 40vw;
     margin: 0 auto;
     padding: 20px;
 }
@@ -101,6 +101,16 @@ h1 {
 .edit-community-button:hover {
     background-color: var(--secondary-color-hover);
     transition: background-color 0.3s ease;
+}
+
+@media (max-width: 768px){
+  .edit-community-container{
+    width: 100%;
+    max-width: 100vw;
+  }
+  .edit-community-button{
+    width: 40%;
+  }
 }
 </style>
   

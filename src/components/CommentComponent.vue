@@ -102,7 +102,6 @@ export default {
                     changeInVotes = voteValue - currentVote;
                 }
 
-                // Optimistically update the UI
                 this.userVote = voteValue;
                 this.$emit('vote-change', this.comment.id, changeInVotes);
 
@@ -114,7 +113,6 @@ export default {
                     voteValue
                 });
 
-                // If you want to be super sure, you can re-fetch the vote count here (but this may not be necessary if your backend ensures vote counts are correct)
                 this.fetchUserVote(this.$store.state.auth.user.uid);
             } else {
                 console.log("User not logged in");

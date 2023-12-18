@@ -10,7 +10,7 @@
                 <div v-if="imagePreview">
                   <img :src="imagePreview" class="image-preview">
                 </div>
-                <button type="submit" class="add-post-button">Add Post</button>
+                <button type="submit" class="add-post-button" :disabled="isUploading">Add Post</button>
             </form>
         </div>
     </div>
@@ -31,6 +31,7 @@ export default {
     const title = ref('');
     const content = ref('');
     const communityId = ref(route.params.communityId);
+    const isUploading = ref(false);
 
     const imageFile = ref(null);
     const imagePreview = ref('');
@@ -44,6 +45,7 @@ export default {
     };
 
     const uploadImage = async () => {
+      isUploading.value = true;
       if (!imageFile.value || !store.state.auth.user) return null;
 
       const userId = store.state.auth.user.uid; // Get the authenticated user's ID
@@ -54,7 +56,8 @@ export default {
         return await getDownloadURL(snapshot.ref);
       } catch (error) {
         console.error("Failed to upload image: ", error);
-        return null;
+      } finally {
+        isUploading.value = false; // Reset to false after upload
       }
     };
 
@@ -99,6 +102,7 @@ export default {
       imagePreview,
       handleImageUpload,
       uploadImage,
+      isUploading,
     };
   }
 };
@@ -167,8 +171,23 @@ h1 {
     float: right;
 }
 
+.add-post-button:disabled {
+    background-color: grey;
+    cursor: not-allowed;
+}
+
 .add-post-button:hover {
     background-color: var(--secondary-color-hover);
     transition: background-color 0.3s ease;
+}
+
+@media (max-width: 768px){
+  .add-post-container{
+    width: 100%;
+    max-width: 100vw;
+  }
+  .add-post-button{
+    width: 40%;
+  }
 }
 </style>

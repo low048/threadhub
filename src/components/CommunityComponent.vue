@@ -35,9 +35,12 @@ export default {
     cursor: pointer;
     background-color: var(--primary-color);
 }
-.community:hover {
-    background-color: var(--primary-color-hover);
-    transition: background-color 0.2s ease;
+
+@media (min-width: 769px) {
+    .community:hover {
+        background-color: var(--primary-color-hover);
+        transition: background-color 0.2s ease;
+    }
 }
 h3 {
   color: var(--primary-text-color);

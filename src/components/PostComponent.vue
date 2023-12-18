@@ -13,9 +13,11 @@
         </div>
         <div class="post-content">
             <p class="community-name" v-if="showCommunityId">c/{{ post.communityId }}</p>
+            <p class="post-author">{{ 'Posted by u/' + post.author + ' • ' + timeAgo(post.timestamp) }}</p>
             <h2>{{ post.title }}</h2>
-            <p v-html="trimmedContent(post.content)"></p>
+            <p class="trimmed-content" v-html="trimmedContent(post.content)"></p>
             <img v-if="post.imageUrl" :src="post.imageUrl" class="post-image">
+            <p class="comment-count"> {{ post.comments.length }} comments</p>
         </div>
     </div>
 </template>
@@ -29,7 +31,7 @@ import { toast } from 'vue3-toastify';
 export default {
     props: {
         post: { type: Object, required: true },
-        showCommunityId: { type: Boolean, default: false }
+        showCommunityId: { type: Boolean, default: true }
     },
     setup(props, context) {
         const store = useStore();
@@ -89,6 +91,29 @@ export default {
             return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
         };
 
+        const timeAgo = (date) => {
+            const intervals = [
+                { label: 'yr', seconds: 31536000 },
+                { label: 'mo', seconds: 2592000 },
+                { label: 'w', seconds: 604800 },
+                { label: 'd', seconds: 86400 },
+                { label: 'h', seconds: 3600 },
+                { label: 'm', seconds: 60 },
+                { label: 's', seconds: 1 }
+            ];
+
+            const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+            const interval = intervals.find(i => i.seconds < seconds);
+
+            if (!interval) {
+                return 'Just now';
+            }
+
+            const count = Math.floor(seconds / interval.seconds);
+            return `${count}${interval.label} ago`;
+        };
+
+
         return {
             upvote,
             downvote,
@@ -96,6 +121,7 @@ export default {
             userVote,
             isAuthenticated,
             navigateToPost,
+            timeAgo
         };
     }
 };
@@ -109,18 +135,34 @@ export default {
     filter: invert(--invert-value);
     padding: 20px;
     padding-right: 50px;
-    padding-bottom: 30px;
+    padding-bottom: 25px;
     margin-bottom: 15px;
     display: flex;
     align-items: flex-start;
     border-radius: 5px;
     cursor: pointer;
-    max-width: 70%;
 }
 
-.post:hover {
-    background-color: var(--primary-color-hover);
-    transition: background-color 0.2s ease;
+@media (min-width: 769px) {
+    .post:hover {
+        background-color: var(--primary-color-hover);
+        transition: background-color 0.2s ease;
+    }
+}
+
+.trimmed-content{
+    margin-bottom: 10px;
+}
+
+.comment-count{
+    color: var(--secondary-text-color);
+    margin: 0px;
+}
+
+
+.post-author{
+    color: var(--secondary-text-color);
+    margin-bottom: 5px;
 }
 
 .post-image{
@@ -169,5 +211,15 @@ p {
     width: 24px;
     height: 18px;
     text-align: center;
+}
+
+@media (max-width: 769px) {
+    .post{
+        padding-left: 10px;
+    }
+    
+    .post-content{
+        margin-left: 10px;
+    }
 }
 </style>

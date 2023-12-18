@@ -1,11 +1,11 @@
 <template>
-    <div class="content-container">
-        <button @click="goToCommunityPage" class="back-to-community-button">Back to c/{{ communityId }}</button>
+    <div class="spinner-container" v-if="loading">
+        <div class="spinner-border" role="status"></div>
+    </div>
+    <div v-else class="content-container">
+        <button @click="goToCommunityPage" class="back-to-community-button" v-if="!loading">Back to c/{{ communityId }}</button>
         <div class="post-container">
-            <div class="spinner-container" v-if="loading">
-            <div class="spinner-border" role="status"></div>
-            </div>
-            <div v-else>
+            <div>
                 <div class="post">
                     <div class="votes">
                         <button @click="upvote" class="vote-button">
@@ -27,21 +27,23 @@
                         </div>
                     </div>
                     <div class="edit-delete-icons" v-if="isAuthor(post.author)">
-                            <img src="@/assets/edit.png" alt="Edit Post" class="edit-icon" @click="editPost">
-                            <img src="@/assets/delete.png" alt="Delete Post" class="delete-icon" @click="deletePost">
+                        <img src="@/assets/edit.png" alt="Edit Post" class="edit-icon" @click="editPost">
+                        <img src="@/assets/delete.png" alt="Delete Post" class="delete-icon" @click="deletePost">
                     </div>
                 </div>
                 <div class="comments-section">
                     <h2>Comments</h2>
                     <div class="add-comment" v-if="isAuthenticated">
-                        <textarea v-model="newComment" placeholder="Add a comment..." class="comment-input" rows="3"></textarea>
+                        <textarea v-model="newComment" placeholder="Add a comment..." class="comment-input"
+                            rows="3"></textarea>
                         <button @click="addComment" class="comment-button">Post Comment</button>
                     </div>
                     <div v-else>
                         <p>You must be logged in to post a comment.</p>
                     </div>
                     <div v-for="comment in comments" :key="comment.id" class="comment">
-                        <comment-component v-if="communityId" :comment="comment" :postId="post.id" :communityId="communityId" @vote-change="handleCommentVoteChange" />
+                        <comment-component v-if="communityId" :comment="comment" :postId="post.id"
+                            :communityId="communityId" @vote-change="handleCommentVoteChange" />
                     </div>
                 </div>
             </div>
@@ -161,7 +163,7 @@ export default {
                 newComment.value = '';
             }
         };
-        
+
         const isAuthor = (postAuthor) => {
             const loggedInUser = store.state.auth.user;
             return loggedInUser && loggedInUser.email === postAuthor;
@@ -169,31 +171,31 @@ export default {
 
         const editPost = async () => {
             try {
-            const editedContent = prompt("Edit your post:", post.value.content);
-            if (editedContent !== null) {
-                await store.dispatch('editPost', {
-                communityId: communityId.value,
-                postId: post.value.id,
-                editedContent
-                });
-            }
+                const editedContent = prompt("Edit your post:", post.value.content);
+                if (editedContent !== null) {
+                    await store.dispatch('editPost', {
+                        communityId: communityId.value,
+                        postId: post.value.id,
+                        editedContent
+                    });
+                }
             } catch (error) {
-            console.error("Error editing post:", error);
+                console.error("Error editing post:", error);
             }
         };
 
         const deletePost = async () => {
             try {
-            const confirmDelete = confirm("Are you sure you want to delete this post?");
-            if (confirmDelete) {
-                await store.dispatch('deletePost', {
-                communityId: communityId.value,
-                postId: post.value.id
-                });
-                router.push({ name: 'Home' }); // Replace 'Home' with your home route name
-            }
+                const confirmDelete = confirm("Are you sure you want to delete this post?");
+                if (confirmDelete) {
+                    await store.dispatch('deletePost', {
+                        communityId: communityId.value,
+                        postId: post.value.id
+                    });
+                    router.push({ name: 'Home' }); // Replace 'Home' with your home route name
+                }
             } catch (error) {
-            console.error("Error deleting post:", error);
+                console.error("Error deleting post:", error);
             }
         };
 
@@ -223,26 +225,45 @@ export default {
 </script>
 
 <style scoped>
-.post-image{
+@media (max-width: 768px) {
+    .back-to-community-button {
+        display: none;
+    }
+
+    .content-container .post-container {
+        max-width: 100vw;
+        padding: 0px;
+    }
+}
+
+.post-image {
     max-width: 100%;
 }
+
 .content-container {
     display: flex;
-    justify-content: center; /* Centers the post-container */
+    justify-content: center;
+    /* Centers the post-container */
     align-items: flex-start;
-    flex-wrap: wrap; /* Allows items to wrap if needed */
+    flex-wrap: wrap;
+    /* Allows items to wrap if needed */
     opacity: 0;
     animation: fade-in-animation 0.1s ease-in forwards;
 }
+
 .ghost-element {
-    width: 150px; /* Adjust this to match the button's width */
-    visibility: hidden; /* Make the element invisible */
+    width: 150px;
+    /* Adjust this to match the button's width */
+    visibility: hidden;
+    /* Make the element invisible */
 }
 
 .back-to-community-button {
-    margin-right: 0px; /* Adjusts the right margin to move it closer to the post-container */
+    margin-right: 0px;
+    /* Adjusts the right margin to move it closer to the post-container */
     margin-top: 20px;
-    order: -1; /* Places the button before the post-container */
+    order: -1;
+    /* Places the button before the post-container */
     background-color: var(--primary-color);
     color: var(--primary-text-color);
     border: 1px solid var(--border-color);
@@ -257,25 +278,34 @@ export default {
 }
 
 @keyframes fade-in-animation {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
-p, h1, h2 {
+
+p,
+h1,
+h2 {
     color: var(--primary-text-color);
 }
-h2{
+
+h2 {
     margin-top: 30px;
 }
+
 .post-container {
     max-width: 50vw;
     padding: 20px;
-    margin-left: 10px; /* Adjusts the left margin to keep the post-container centered */
-    flex-grow: 1; /* Allows the post-container to grow and use available space */
+    margin-left: 10px;
+    /* Adjusts the left margin to keep the post-container centered */
+    flex-grow: 1;
+    /* Allows the post-container to grow and use available space */
 }
+
 .post {
     background-color: var(--primary-color);
     border: 1px solid var(--border-color);
@@ -286,13 +316,16 @@ h2{
     border-radius: 5px;
     position: relative;
 }
+
 .post-content {
     margin-left: 20px;
 }
+
 .post-title {
     font-size: 1.75rem;
     margin-bottom: 10px;
 }
+
 .votes {
     display: flex;
     flex-direction: column;
@@ -300,12 +333,14 @@ h2{
     justify-content: space-between;
     height: 72px;
 }
+
 .vote-button {
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
 }
+
 .vote-image {
     width: 24px;
     height: 24px;
@@ -316,6 +351,7 @@ h2{
     height: 18px;
     text-align: center;
 }
+
 .comment-input {
     border: 1px solid var(--border-color);
     background-color: var(--primary-color);
@@ -325,6 +361,7 @@ h2{
     width: 100%;
     margin-bottom: 10px;
 }
+
 .comment-button {
     background-color: var(--secondary-color);
     color: white;
@@ -335,46 +372,52 @@ h2{
     font-weight: bold;
     margin-bottom: 10px;
 }
+
 .comment-button:hover {
     background-color: var(--secondary-color-hover);
     transition: background-color 0.3s ease;
 }
+
 .loading-post {
     text-align: center;
 }
+
 .author-timestamp {
     color: var(--secondary-text-color);
     font-size: 0.9rem;
     margin-top: 10px;
 }
+
 .spinner-container {
-  color: var(--primary-text-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 70vh;
+    color: var(--primary-text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    width: 100%;
 }
 
 .edit-delete-icons {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  display: flex;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
 }
 
 .edit-icon,
 .delete-icon {
-  width: 24px;
-  height: 24px;
-  margin-left: 10px;
-  cursor: pointer;
-  filter: invert(var(--invert-value));
+    width: 24px;
+    height: 24px;
+    margin-left: 10px;
+    cursor: pointer;
+    filter: invert(var(--invert-value));
 }
+
 .edit-icon:hover,
 .delete-icon:hover {
-  filter: invert(var(--invert-value-hover));
+    filter: invert(var(--invert-value-hover));
 }
+
 p {
     color: var(--primary-text-color);
-}
-</style>
+}</style>
