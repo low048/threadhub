@@ -87,10 +87,13 @@ export default {
       try {
           console.log("fetchFeaturedPosts called");
           const featuredPostsPaths = [
+              'communities/ChatGPT/post/E19h9FeAkaSXp0ityGc8',
               'communities/explainlikeimfive/post/5QFlpxS3D1i406rMzIXk',
               'communities/lithuania/post/XO7FWcS9PlfpXZAWidd2',
               'communities/ChoosingBeggars/post/6kerGzzjjIxwO9y6tlmJ',
+              'communities/lithuania/post/VLTOpOPWQycJODdI5Cns',
               'communities/explainlikeimfive/post/le0Xoyon3fs6ilgPPXyN',
+              'communities/ChoosingBeggars/post/5UYYHUORFy3zJ95XgVYG',
           ];
   
           for (const path of featuredPostsPaths) {

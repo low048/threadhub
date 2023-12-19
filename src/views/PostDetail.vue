@@ -238,6 +238,7 @@ export default {
 
 .post-image {
     max-width: 100%;
+    max-height: 90vh;
 }
 
 .content-container {
@@ -270,6 +271,10 @@ export default {
     border-radius: 5px;
     padding: 10px 20px;
     cursor: pointer;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 10px;
+    z-index: 10;
 }
 
 .back-to-community-button:hover {
@@ -301,9 +306,7 @@ h2 {
     max-width: 50vw;
     padding: 20px;
     margin-left: 10px;
-    /* Adjusts the left margin to keep the post-container centered */
     flex-grow: 1;
-    /* Allows the post-container to grow and use available space */
 }
 
 .post {

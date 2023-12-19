@@ -157,6 +157,7 @@ export default {
 .comment-count{
     color: var(--secondary-text-color);
     margin: 0px;
+    margin-top: 5px;
 }
 
 
@@ -167,6 +168,7 @@ export default {
 
 .post-image{
     max-width: 100%;
+    max-height: 70vh;
 }
 
 .community-name{

@@ -1,9 +1,7 @@
 <template>
   <div id="app" :class="{ dark: darkMode }">
     <header>
-      <h1>
-        <router-link to="/" class="header-link">threadhub</router-link>
-      </h1>
+      <router-link to="/" class="header-link">threadhub</router-link>
       <div class="header-buttons">
         <button v-if="!isAuthenticated" @click="goToLogin">Log In</button>
         <!--<button v-if="!isAuthenticated" @click="goToSignUp">Sign Up</button>-->
@@ -120,15 +118,15 @@ header {
   align-items: center;
 }
 
-h1 {
-  margin: 0;
-}
-
 .header-link {
   color: white;
   text-decoration: none;
-  font-size:xx-large;
-  margin-left:5px;
+  font-size: xx-large;
+  margin: 0px;
+  margin-left: 5px;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .header-link:hover {
