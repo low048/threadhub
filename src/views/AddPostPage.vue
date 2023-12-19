@@ -14,32 +14,46 @@
 <script>
 import { ref } from 'vue';
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 export default {
-    setup() {
-        const store = useStore();
-        const router = useRouter();
-        const title = ref('');
-        const content = ref('');
+  setup() {
+    const store = useStore();
+    const router = useRouter();
+    const route = useRoute();
+    const title = ref('');
+    const content = ref('');
+    const communityId = ref(route.params.communityId);
 
-        const addPost = async () => {
-            const postId = await store.dispatch('addPost', {
-                title: title.value,
-                content: content.value
-            });
-            title.value = '';
-            content.value = '';
+    const addPost = async () => {
+      const postData = {
+        title: title.value,
+        content: content.value
+      };
+      
+      const postId = await store.dispatch('addPost', {
+        postData, 
+        communityId: communityId.value
+      });
 
-            if (postId) {
-                router.push({ name: 'PostDetail', params: { id: postId } });
-            }
-        };
+      title.value = '';
+      content.value = '';
 
-        return { title, content, addPost };
-    }
+      if (postId) {
+        router.push({ name: 'PostDetail', params: { id: postId, communityId: communityId.value } });
+      }
+    };
+
+    return {
+      title, 
+      content, 
+      addPost,
+      communityId
+    };
+  }
 };
 </script>
+
   
 <style scoped>
 .add-post-container {
