@@ -21,6 +21,7 @@
                         <p class="author-timestamp">by u/{{ post.author }} at {{ post.timestamp.toLocaleString() }}</p>
                     </div>
                 </div>
+                <button v-if="isAuthenticated && post.author === store.state.auth.user.uid" @click="deletePost" class="delete-button">Delete Post</button>
             </div>
             <div class="comments-section">
                 <h2>Comments</h2>
@@ -148,6 +149,18 @@ export default {
             }
         };
 
+        const deletePost = async () => {
+            try {
+                await store.dispatch('deletePost', post.value.id);
+                toast("Post deleted successfully", { autoClose: 2000, type: 'success', position: 'bottom-right' });
+            } catch (error) {
+                console.error("Error while deleting post:", error);
+                toast("Error while deleting post", { autoClose: 2000, type: 'error', position: 'bottom-right' });
+            }
+        };
+
+
+
         return {
             post,
             communityId,
@@ -159,7 +172,8 @@ export default {
             upvote,
             downvote,
             addComment,
-            handleCommentVoteChange
+            handleCommentVoteChange,
+            deletePost
         };
     }
 };
