@@ -1,11 +1,16 @@
 <template>
     <div class="add-post-container">
         <div class="add-post">
-            <h1 class="post-title">Add New Post</h1>
+            <h1 class="post-title">Add New Post in c/{{ communityId }}</h1>
             <form @submit.prevent="addPost" class="add-post-form">
                 <input type="text" v-model="title" placeholder="Post Title" required class="post-input">
-                <textarea v-model="content" placeholder="Post Content" required class="post-input"></textarea>
-                <button type="submit" class="comment-button">Add Post</button>
+                <textarea v-model="content" placeholder="Post Content" required class="post-input" :style="{height: '30vh'}"></textarea>
+                <label for="image-upload" class="image-upload-label">Upload image:</label>
+                <input type="file" @change="handleImageUpload" accept="image/*" class="image-upload-input">
+                <div v-if="imagePreview">
+                  <img :src="imagePreview" class="image-preview">
+                </div>
+                <button type="submit" class="add-post-button" :disabled="isUploading">Add Post</button>
             </form>
         </div>
     </div>
@@ -15,6 +20,8 @@
 import { ref } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
+import { storage } from '@/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default {
   setup() {
@@ -24,31 +31,78 @@ export default {
     const title = ref('');
     const content = ref('');
     const communityId = ref(route.params.communityId);
+    const isUploading = ref(false);
 
-    const addPost = async () => {
-      const postData = {
-        title: title.value,
-        content: content.value
-      };
-      
-      const postId = await store.dispatch('addPost', {
-        postData, 
-        communityId: communityId.value
-      });
+    const imageFile = ref(null);
+    const imagePreview = ref('');
 
-      title.value = '';
-      content.value = '';
-
-      if (postId) {
-        router.push({ name: 'PostDetail', params: { id: postId, communityId: communityId.value } });
+    const handleImageUpload = event => {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        imageFile.value = file;
+        imagePreview.value = URL.createObjectURL(file);
       }
     };
+
+    const uploadImage = async () => {
+      isUploading.value = true;
+      if (!imageFile.value || !store.state.auth.user) return null;
+
+      const userId = store.state.auth.user.uid; // Get the authenticated user's ID
+      const storageReference = storageRef(storage, `users/${userId}/images/${Date.now()}-${imageFile.value.name}`);
+
+      try {
+        const snapshot = await uploadBytes(storageReference, imageFile.value);
+        return await getDownloadURL(snapshot.ref);
+      } catch (error) {
+        console.error("Failed to upload image: ", error);
+      } finally {
+        isUploading.value = false; // Reset to false after upload
+      }
+    };
+
+    const addPost = async () => {
+    let imageUrl = null;
+    if (imageFile.value) {
+      imageUrl = await uploadImage();
+      if (!imageUrl) {
+        console.error("Failed to upload image", { type: 'error' });
+        return;
+      }
+    }
+
+    const postData = {
+      title: title.value,
+      content: content.value,
+      imageUrl: imageUrl // include the image URL
+    };
+
+    const postId = await store.dispatch('addPost', {
+      postData, 
+      communityId: communityId.value
+    });
+
+    title.value = '';
+    content.value = '';
+
+    if (postId) {
+      router.push({ name: 'PostDetail', params: { id: postId, communityId: communityId.value } });
+    } else {
+      console.error("Failed to create post", { type: 'error' });
+    }
+  };
+
 
     return {
       title, 
       content, 
       addPost,
-      communityId
+      communityId,
+      imageFile,
+      imagePreview,
+      handleImageUpload,
+      uploadImage,
+      isUploading,
     };
   }
 };
@@ -56,6 +110,21 @@ export default {
 
   
 <style scoped>
+h1 {
+  color: var(--primary-text-color);
+}
+.image-preview{
+  max-width: 50%;
+  margin-bottom: 10px;
+}
+.image-upload-input{
+  color: var(--primary-text-color);
+  margin-bottom: 10px;
+}
+.image-upload-label {
+  color: var(--primary-text-color);
+  margin-bottom: 10px; /* Space between label and input */
+}
 .add-post-container {
     max-width: 50vw;
     margin: 0 auto;
@@ -63,7 +132,8 @@ export default {
 }
 
 .add-post {
-    border: 1px solid #ddd;
+    background-color: var(--primary-color);
+    border: 1px solid var(--border-color);
     padding: 20px;
     margin-bottom: 15px;
     border-radius: 5px;
@@ -80,25 +150,44 @@ export default {
 }
 
 .post-input {
-    border: 1px solid #ddd;
+    background-color: var(--primary-color-hover);
+    border: 1px solid var(--border-color);
     padding: 10px;
     border-radius: 5px;
     margin-bottom: 10px;
     width: 100%;
+    color: var(--primary-text-color);
 }
 
-.comment-button {
-    background-color: #007BFF;
+.add-post-button {
+    background-color: var(--secondary-color);
     color: white;
     border: none;
     border-radius: 5px;
     padding: 10px 20px;
     cursor: pointer;
     font-weight: bold;
+    width: 20%;
+    float: right;
+}
+
+.add-post-button:disabled {
+    background-color: grey;
+    cursor: not-allowed;
+}
+
+.add-post-button:hover {
+    background-color: var(--secondary-color-hover);
     transition: background-color 0.3s ease;
 }
 
-.comment-button:hover {
-    background-color: #0056b3;
+@media (max-width: 768px){
+  .add-post-container{
+    width: 100%;
+    max-width: 100vw;
+  }
+  .add-post-button{
+    width: 40%;
+  }
 }
 </style>

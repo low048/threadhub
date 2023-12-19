@@ -21,8 +21,6 @@ export default {
             console.log(props.community.id);
             router.push({ name: 'CommunityPage', params: { communityId: props.community.id } });
         };
-
-
         return { navigateToCommunity };
     }
 };
@@ -30,24 +28,27 @@ export default {
 
 <style scoped>
 .community {
-    border: 1px solid #ddd;
-    padding: 10px;
+    border: 1px solid var(--border-color);
+    padding: 20px;
     margin-bottom: 15px;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    &:hover {
-        background-color: #f5f5f5;
+    background-color: var(--primary-color);
+}
+
+@media (min-width: 769px) {
+    .community:hover {
+        background-color: var(--primary-color-hover);
+        transition: background-color 0.2s ease;
     }
 }
-
 h3 {
-    font-size: 1.2rem;
-    margin-bottom: 15px;
+  color: var(--primary-text-color);
+  font-size: 1.2rem;
+  margin-bottom: 15px;
 }
 
-.author, .description, .timestamp {
-    font-size: 0.9rem;
-    color: #555;
+p {
+  color: var(--secondary-text-color);
 }
 </style>
