@@ -24,34 +24,27 @@ export default {
       });
     },
     ADD_COMMENT(state, comment) {
-      console.log("Adding comment: ", comment);
       const post = findPostById(state, comment.postId);
-      console.log(post);
       if (post) {
         if (!post.comments) {
           post.comments = [];
         }
         post.comments = [...post.comments, comment];
-        console.log("post.comments = [...post.comments, comment]");
       }
     },    
     EDIT_COMMENT(state, { commentId, editedContent }) {
-      console.log("Editing comment with ID: ", commentId);
       state.postList.forEach(post => {
         const commentIndex = post.comments.findIndex(comment => comment.id === commentId);
         if (commentIndex !== -1) {
           post.comments[commentIndex].content = editedContent;
-          console.log("Comment edited successfully");
         }
       });
     },
     DELETE_COMMENT(state, commentId) {
-      console.log("Deleting comment with ID: ", commentId);
       state.postList.forEach(post => {
         const commentIndex = post.comments.findIndex(comment => comment.id === commentId);
         if (commentIndex !== -1) {
           post.comments.splice(commentIndex, 1);
-          console.log("Comment deleted successfully");
         }
       });
     },
@@ -85,43 +78,43 @@ export default {
   actions: {
     async fetchFeaturedPosts({ dispatch, commit, state }) {
       try {
-          console.log("fetchFeaturedPosts called");
-          const featuredPostsPaths = [
-              'communities/ChatGPT/post/E19h9FeAkaSXp0ityGc8',
-              'communities/explainlikeimfive/post/5QFlpxS3D1i406rMzIXk',
-              'communities/lithuania/post/XO7FWcS9PlfpXZAWidd2',
-              'communities/ChoosingBeggars/post/6kerGzzjjIxwO9y6tlmJ',
-              'communities/lithuania/post/VLTOpOPWQycJODdI5Cns',
-              'communities/explainlikeimfive/post/le0Xoyon3fs6ilgPPXyN',
-              'communities/ChoosingBeggars/post/5UYYHUORFy3zJ95XgVYG',
-          ];
-  
-          for (const path of featuredPostsPaths) {
-              const pathSegments = path.split('/');
-              const communityId = pathSegments[1];
-              const postId = pathSegments[3];
-  
-              if (communityId && postId) {
-                  await dispatch('fetchSinglePost', { communityId: { value: communityId }, postId: postId });
-  
-                  // Set the isFeatured property after fetching
-                  const featuredPost = findPostById(state, postId);
-                  if (featuredPost) {
-                      const updatedPost = { ...featuredPost, isFeatured: true };
-                      commit('SET_POSTS', [updatedPost]); // Use SET_POSTS to update the post
-                  }
-              }
+        const featuredPostsPaths = [
+            'communities/ChatGPT/post/E19h9FeAkaSXp0ityGc8',
+            'communities/explainlikeimfive/post/5QFlpxS3D1i406rMzIXk',
+            'communities/lithuania/post/XO7FWcS9PlfpXZAWidd2',
+            'communities/ChoosingBeggars/post/6kerGzzjjIxwO9y6tlmJ',
+            'communities/lithuania/post/VLTOpOPWQycJODdI5Cns',
+            'communities/explainlikeimfive/post/le0Xoyon3fs6ilgPPXyN',
+            'communities/ChoosingBeggars/post/5UYYHUORFy3zJ95XgVYG',
+        ];
+
+        const fetchPostPromises = featuredPostsPaths.map(path => {
+          const pathSegments = path.split('/');
+          return dispatch('fetchSinglePost', { communityId: { value: pathSegments[1] }, postId: pathSegments[3] });
+        });
+    
+        const results = await Promise.allSettled(fetchPostPromises);
+    
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            const postId = featuredPostsPaths[index].split('/')[3];
+            const featuredPost = findPostById(state, postId);
+            if (featuredPost) {
+              const updatedPost = { ...featuredPost, isFeatured: true };
+              commit('SET_POSTS', [updatedPost]);
+            }
+          } else {
+            console.error('Error fetching post:', result.reason);
           }
+        });
       } catch (error) {
-          console.error("Error in fetchFeaturedPosts: ", error);
+        console.error("Error in fetchFeaturedPosts: ", error);
       }
-    },     
+    },  
     async fetchSinglePost({ commit, rootState, dispatch }, { communityId, postId }) {
       try {
-        console.log("trying to fetch single post");
         const postRef = doc(db, `communities/${communityId.value}/posts`, postId);
         const postDoc = await getDoc(postRef);
-        console.log("fetched single post", `communities/${communityId.value}/posts`, postId);
         if (postDoc.exists()) {
           let post = { id: postDoc.id, communityId: communityId.value, ...postDoc.data(), comments: [] };
           post.timestamp = post.timestamp.toDate();
@@ -132,14 +125,11 @@ export default {
             const data = commentDoc.data();
             return { ...data, id: commentDoc.id, timestamp: data.timestamp.toDate() };
           });
-          console.log("set single post");
           commit('SET_POSTS', [post]);
-          console.log("set posts in fetchSinglePost");
           if (rootState.auth.user) {
             const userId = rootState.auth.user.uid;
             const userVoteValue = await dispatch('fetchUserVote', { userId, postId });
             post.userVote = userVoteValue;
-            console.log("setting uservote to", userVoteValue, "in fetchSinglePost");
             commit('SET_POSTS', [post]);
           }
         }
@@ -149,34 +139,49 @@ export default {
     },
     async fetchPosts({ commit, rootState, dispatch }, communityId) {
       try {
-        console.log("fetching posts for", communityId.value);
         const postsColRef = collection(db, `communities/${communityId.value}/posts`);
         const querySnapshot = await getDocs(postsColRef);
-        const posts = querySnapshot.docs.map(doc => {
-          const post = { id: doc.id, communityId: communityId.value, ...doc.data(), comments: [] };
-          const commentsColRef = collection(doc.ref, 'comments');
+        
+        const postsPromises = querySnapshot.docs.map(doc => {
+          const postRef = doc.ref;
+          const commentsColRef = collection(postRef, 'comments');
           return getDocs(commentsColRef).then(commentsSnapshot => {
-            post.comments = commentsSnapshot.docs.map(commentDoc => {
-              const data = commentDoc.data();
-              return { ...data, id: commentDoc.id, timestamp: data.timestamp.toDate() };
-            });
-            post.timestamp = post.timestamp.toDate();
+            const post = {
+              id: doc.id,
+              communityId: communityId.value,
+              ...doc.data(),
+              comments: commentsSnapshot.docs.map(commentDoc => {
+                const data = commentDoc.data();
+                return { ...data, id: commentDoc.id, timestamp: data.timestamp.toDate() };
+              }),
+              timestamp: doc.data().timestamp.toDate()
+            };
             return post;
           });
         });
-        const resolvedPosts = await Promise.all(posts);
+    
+        const results = await Promise.allSettled(postsPromises);
+    
+        const resolvedPosts = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+    
         commit('SET_POSTS', resolvedPosts);
-        console.log("set posts in fetchPosts");
+    
         if (rootState.auth.user) {
           const userId = rootState.auth.user.uid;
-          for (let post of resolvedPosts) {
-            if (post.id && userId) {
-              const userVoteValue = await dispatch('fetchUserVote', { userId, postId: post.id });
-              post.userVote = userVoteValue;
-              console.log("setting uservote to", userVoteValue, "in fetchPosts");
+          const userVotePromises = resolvedPosts.map(post => {
+            if (post.id) {
+              return dispatch('fetchUserVote', { userId, postId: post.id }).then(userVoteValue => {
+                post.userVote = userVoteValue;
+                return post;
+              });
             }
-          }
-          commit('SET_POSTS', resolvedPosts);
+            return Promise.resolve(post);
+          });
+    
+          const voteResults = await Promise.allSettled(userVotePromises);
+          const postsWithVotes = voteResults.filter(result => result.status === 'fulfilled').map(result => result.value);
+          
+          commit('SET_POSTS', postsWithVotes);
         }
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -184,11 +189,7 @@ export default {
     },
     async fetchUserVote({ state, commit }, { userId, postId }) {
       try {
-        // Find the post in the state
         const post = findPostById(state, postId);
-        console.log('Post found:', post);
-        console.log('Current state.postList:', state.postList);
-        // Check if the post is found and has a communityId
         if (post && post.communityId) {
           const userVoteRef = doc(db, `communities/${post.communityId}/posts`, postId, 'userVotes', userId);
           const userVoteDoc = await getDoc(userVoteRef);
@@ -258,7 +259,6 @@ export default {
           timestamp: serverTimestamp()
         });
         commit('ADD_POST', { ...postData, id: newPostRef.id, communityId: communityId }); //communityId.value if it's passed as a ref, yet to be decided
-        console.log("New post added with ID:", newPostRef.id);
         return newPostRef.id;
       }
       catch (error) {
